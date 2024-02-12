@@ -1,34 +1,33 @@
 ﻿#pragma once
 #include "SDL_render.h"
 
-enum class ParticleType
-{
-    None,
-    Sand,
-    Water
-};
+class Filed;
 
 class TheGame
 {
-private:
+public:
     static const int WIDTH = 800;
     static const int HEIGHT = 600;
-
-    static bool isRunning;
     
-    static ParticleType** m_particles;
+private:
+    bool isRunning;
+    SDL_Renderer* m_renderer;
 
-    static SDL_Renderer* m_renderer;
+    Filed* m_filed;
     
 public:
 
-    static void Run();
+    static TheGame& Instance();
+    SDL_Renderer* GetRenderer() const;
     
-    static void Init();
+    void Run();
 
-    static void HandleEvents();
-    static void Update(float dt);
-    static void Render();
+private:
+    void Init();
 
-    static void CleanUp();
+    void HandleEvents();
+    void Update(float dt);
+    void Render();
+
+    void CleanUp();
 };

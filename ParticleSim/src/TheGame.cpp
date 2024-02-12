@@ -4,9 +4,18 @@
 #include <SDL.h>
 #include <iostream>
 
-ParticleType** TheGame::m_particles = nullptr;
-SDL_Renderer* TheGame::m_renderer = nullptr;
-bool TheGame::isRunning = false;
+#include "Filed.h"
+
+TheGame& TheGame::Instance()
+{
+    static TheGame game;
+    return game;
+}
+
+SDL_Renderer* TheGame::GetRenderer() const
+{
+    return m_renderer;
+}
 
 void TheGame::Run()
 {
@@ -14,12 +23,10 @@ void TheGame::Run()
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
         printf("error initializing SDL: %s\n", SDL_GetError());
     }
-    SDL_Window* win = SDL_CreateWindow("GAME",
-        SDL_WINDOWPOS_CENTERED,
-        SDL_WINDOWPOS_CENTERED,
-        800, 600, 0);
+    SDL_Window* win;
 
-    m_renderer = SDL_GetRenderer(win);
+    SDL_CreateWindowAndRenderer( 800, 600, 0, &win, &m_renderer);
+
 	
     float dt = 0.0f;
 
@@ -43,15 +50,7 @@ void TheGame::Run()
 
 void TheGame::Init()
 {
-    m_particles = new ParticleType*[WIDTH];
-    for (int i = 0; i < WIDTH; ++i)
-    {
-        m_particles[i] = new ParticleType[HEIGHT];
-        for (int j = 0; j < HEIGHT; ++j)
-        {
-            m_particles[i][j] = ParticleType::None;
-        }
-    }
+    m_filed = new Filed;
 }
 
 void TheGame::HandleEvents()
@@ -75,27 +74,23 @@ void TheGame::HandleEvents()
 
 void TheGame::Update(float dt)
 {
-    for (int y = 0; y < HEIGHT; ++y)
-    {
-        for (int x = 0; x < WIDTH; ++x)
-        {
-            //std::cout << (int)m_particles[x][y] << " ";
-        }
-        std::cout << '\n';
-    }
+    m_filed->Update(dt);
     std::cout << "delta time: " << dt << '\n';
 }
 
 void TheGame::Render()
 {
+    SDL_RenderClear(m_renderer);
+    //SDL_Rect r = {100, 100, 100, 100};
+    //SDL_SetRenderDrawColor(m_renderer, 255, 255, 255, 255);
+    //SDL_RenderDrawRect(m_renderer, &r);
     
+    m_filed->Render();
+    SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 1);
+    SDL_RenderPresent(m_renderer);
 }
 
 void TheGame::CleanUp()
 {
-    for (int i = 0; i < WIDTH; ++i)
-    {
-        delete m_particles[i];
-    }
-    delete m_particles;
+    delete m_filed;
 }
