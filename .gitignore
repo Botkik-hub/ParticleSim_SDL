@@ -8,6 +8,10 @@ riderModule.iml
 .vs/
 
 ParticleSim/x64/
+ParticleSim/Debug/
+ParticleSim/Release/
+
 x64/
+Release/
 
 *.pdb
