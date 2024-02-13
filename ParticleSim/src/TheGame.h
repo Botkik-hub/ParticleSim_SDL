@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "SDL_render.h"
 
-class Filed;
+class Field;
 
 class TheGame
 {
@@ -13,7 +13,7 @@ private:
     bool isRunning;
     SDL_Renderer* m_renderer;
 
-    Filed* m_filed;
+    Field* m_filed;
     
 public:
 

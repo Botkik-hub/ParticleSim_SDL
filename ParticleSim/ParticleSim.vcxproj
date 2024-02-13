@@ -175,8 +175,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\Filed.cpp" />
+    <ClCompile Include="src\Field.cpp" />
     <ClCompile Include="src\Main.cpp" />
+    <ClCompile Include="src\Particle.cpp" />
+    <ClCompile Include="src\Sand.cpp" />
     <ClCompile Include="src\TheGame.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -258,7 +260,9 @@
     <ClInclude Include="include\SDL_version.h" />
     <ClInclude Include="include\SDL_video.h" />
     <ClInclude Include="include\SDL_vulkan.h" />
-    <ClInclude Include="src\Filed.h" />
+    <ClInclude Include="src\Field.h" />
+    <ClInclude Include="src\Particle.h" />
+    <ClInclude Include="src\Sand.h" />
     <ClInclude Include="src\TheGame.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

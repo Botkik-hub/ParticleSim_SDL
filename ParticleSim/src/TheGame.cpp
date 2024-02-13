@@ -4,7 +4,7 @@
 #include <SDL.h>
 #include <iostream>
 
-#include "Filed.h"
+#include "Field.h"
 
 TheGame& TheGame::Instance()
 {
@@ -50,7 +50,7 @@ void TheGame::Run()
 
 void TheGame::Init()
 {
-    m_filed = new Filed;
+    m_filed = new Field;
 }
 
 void TheGame::HandleEvents()
