@@ -41,7 +41,7 @@ public:
     void UpdateTile(int x, int y);
 
     void Update(float dt);
-    void Render() const;
+    void Render();
 
     int Ind(int x, int y) const;
     void Coord(int i, int& x, int& y) const;

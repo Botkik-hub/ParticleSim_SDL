@@ -101,14 +101,20 @@ void Field::Update(float dt)
     }
 }
 
-void Field::Render() const
+void Field::Render()
 {
+    SDL_Rect changedRect = m_updateArea;
     if (m_needUpdateTexture)
     {
-        SDL_UpdateTexture(m_texture, &m_updateArea, m_textureColors, m_width * sizeof(Uint32));
+        SDL_UpdateTexture(m_texture, nullptr, m_textureColors, m_width * sizeof(Uint32));
+        // SDL_UpdateTexture(m_texture, &m_updateArea, m_textureColors, m_width * sizeof(Uint32));
+        m_updateArea = {-1, -1, 0, 0};
+        m_needUpdateTexture = false;
     }
     
     SDL_RenderCopy(m_renderer, m_texture , nullptr, nullptr);
+    SDL_SetRenderDrawColor(m_renderer, 0, 255, 0, 255);
+    SDL_RenderDrawRect(m_renderer, &changedRect);
 }
 
 Uint32 Field::GetColor(const ParticleType type) const
@@ -171,11 +177,17 @@ void Field::Coord(int i, int& x, int& y) const
 void Field::UpdateTexture(const std::vector<Pixel>& pixels)
 {
     m_needUpdateTexture = true;
-    
     for (const auto pixel : pixels)
     {
+        m_textureColors[Ind(pixel.x, pixel.y)] = pixel.color;
+        if (m_updateArea.x == -1 && m_updateArea.y == -1)
+        {
+            m_updateArea = {pixel.x, pixel.y, 1, 1};
+            continue;
+        } 
         if (pixel.x < m_updateArea.x)
         {
+            m_updateArea.w += m_updateArea.x - pixel.x;
             m_updateArea.x = pixel.x;
         }
         if (pixel.x > m_updateArea.x + m_updateArea.w)
@@ -190,7 +202,6 @@ void Field::UpdateTexture(const std::vector<Pixel>& pixels)
         {
             m_updateArea.h = pixel.y - m_updateArea.y;
         }
-        m_textureColors[Ind(pixel.x, pixel.y)] = pixel.color;
     }
 }
 
