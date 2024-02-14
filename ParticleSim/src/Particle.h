@@ -1,22 +1,16 @@
 ﻿#pragma once
 
-class Field;
-
-class Particle
+enum class ParticleType
 {
-public:
-    explicit Particle(Field* field) : x(0), y(0), m_field(field){}
+    None,
+    Sand,
+    Water
+};
 
-    virtual ~Particle() = default;
-    
-    int x;
-    int y;
-    
-    bool needUpdate = true;
 
-protected:
-    Field* m_field;
-
-public:
-    virtual void Update();
+struct Particle
+{
+    ParticleType type;
+    bool isActive;
+    bool frameToUpdateFlag;
 };

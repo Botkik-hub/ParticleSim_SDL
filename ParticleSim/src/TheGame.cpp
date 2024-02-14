@@ -43,7 +43,13 @@ void TheGame::Run()
         Render();
 
         const Uint32 frameEnd = SDL_GetTicks();
-        dt = static_cast<float>(frameEnd - frameStart) / 1000.0f; 
+        dt = static_cast<float>(frameEnd - frameStart) / 1000.0f;
+        if (dt < 0.016)
+        {
+            const Uint32 time = 16 - (frameEnd - frameStart);
+            SDL_Delay(time);
+            dt = 0.016;
+        }
     }
     CleanUp();
 }
@@ -51,6 +57,7 @@ void TheGame::Run()
 void TheGame::Init()
 {
     m_filed = new Field;
+    m_filed->AddParticles();
 }
 
 void TheGame::HandleEvents()
@@ -92,5 +99,6 @@ void TheGame::Render()
 
 void TheGame::CleanUp()
 {
+    m_filed->CleanUp();
     delete m_filed;
 }

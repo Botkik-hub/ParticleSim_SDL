@@ -1,61 +1,52 @@
 ﻿#pragma once
-#include <vector>
-
-#include "SDL_egl.h"
+#include <set>
 #include "SDL_render.h"
 
+enum class ParticleType;
+class Particle;
 
-enum class ParticleType
-{
-    None,
-    Sand,
-    Water
-};
-
-
-struct Pixel
-{
-    int x;
-    int y;
-    Uint32 color;
-};
 
 class Field
 {
-    ParticleType* m_particles = nullptr;
-    SDL_Renderer* m_renderer = nullptr;
-
     int m_width;
     int m_height;
     int m_size;
 
+    bool m_frameToUpdateFlag;
+    
+    std::set<Particle*> m_activeParticles;
+    Particle* m_particles;
+    
+    SDL_Renderer* m_renderer = nullptr;
     bool m_needUpdateTexture;
     Uint32* m_textureColors;
     SDL_Rect m_updateArea;
     SDL_Texture* m_texture;
 public:
-
+    void AddParticles();
     Field();
     ~Field();
-    void ApplyGravity(int x, int y);
-    void UpdateTile(int x, int y);
 
+    void CleanUp();
+    
     void Update(float dt);
-    void CopyTexture();
+    void CopyTexturePart();
     void Render();
 
     int Ind(int x, int y) const;
     void Coord(int i, int& x, int& y) const;
 
-    void UpdateTexture(const std::vector<Pixel>& pixels);
+    void UpdateTexture(int ind, Uint32 color);
     
 private:
-
-    //void SwapParticles(int x1, int y1, int x2, int y2);
-
-    void SwapParticles(int i1, int i2);
-    
-    bool CanSwap(int i1, int i2) const;
-
     static Uint32 ColToUint(SDL_Color color);
+
+private:
+    void UpdateParticle(Particle* particle, int x, int y);
+
+    void UpdateSand(Particle* particle, int x, int y);
+    void SwapParticles(int ind, int indOther);
+    void UpdateWater(Particle* particle, int x, int y);
+
+    Uint32 GetColorByType(ParticleType type);
 };
