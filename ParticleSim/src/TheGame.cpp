@@ -25,7 +25,7 @@ void TheGame::Run()
     }
     SDL_Window* win;
 
-    SDL_CreateWindowAndRenderer( 800, 600, 0, &win, &m_renderer);
+    SDL_CreateWindowAndRenderer( 1600, 1200, 0, &win, &m_renderer);
 
 	
     float dt = 0.0f;

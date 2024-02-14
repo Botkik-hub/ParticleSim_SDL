@@ -13,8 +13,10 @@ public:
     int y;
     
     bool needUpdate = true;
-private:
+
+protected:
     Field* m_field;
+
 public:
     virtual void Update();
 };

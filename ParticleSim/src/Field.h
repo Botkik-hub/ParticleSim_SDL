@@ -41,14 +41,15 @@ public:
     void UpdateTile(int x, int y);
 
     void Update(float dt);
+    void CopyTexture();
     void Render();
 
     int Ind(int x, int y) const;
     void Coord(int i, int& x, int& y) const;
 
     void UpdateTexture(const std::vector<Pixel>& pixels);
+    
 private:
-    Uint32 GetColor(ParticleType type) const;
 
     //void SwapParticles(int x1, int y1, int x2, int y2);
 

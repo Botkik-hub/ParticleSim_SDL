@@ -101,20 +101,36 @@ void Field::Update(float dt)
     }
 }
 
+void Field::CopyTexture()
+{
+    SDL_UpdateTexture(m_texture, nullptr, m_textureColors, m_width * sizeof(Uint32))
+    // make array of colors by rect
+    Uint32* rectColors = new Uint32[m_updateArea.w * m_updateArea.h];
+    for (int y = 0; y < m_updateArea.h; ++y)
+    {
+        Uint32* thisLineStart = m_textureColors + ((m_updateArea.y + y) * m_width + m_updateArea.x);
+        Uint32* thisLineEnd = m_textureColors + ((m_updateArea.y + y) * m_width + m_updateArea.x + m_updateArea.w);
+        Uint32* rectLineStart = rectColors + (y * m_updateArea.w);
+        std::copy(thisLineStart, thisLineEnd, rectLineStart);
+    }
+        
+    SDL_UpdateTexture(m_texture, &m_updateArea, rectColors, m_updateArea.w * sizeof(Uint32));
+    delete[] rectColors;
+    m_updateArea = {-1, -1, 0, 0};
+}
+
 void Field::Render()
 {
-    SDL_Rect changedRect = m_updateArea;
     if (m_needUpdateTexture)
     {
+        //CopyTexture();
+
         SDL_UpdateTexture(m_texture, nullptr, m_textureColors, m_width * sizeof(Uint32));
-        // SDL_UpdateTexture(m_texture, &m_updateArea, m_textureColors, m_width * sizeof(Uint32));
-        m_updateArea = {-1, -1, 0, 0};
         m_needUpdateTexture = false;
     }
     
     SDL_RenderCopy(m_renderer, m_texture , nullptr, nullptr);
     SDL_SetRenderDrawColor(m_renderer, 0, 255, 0, 255);
-    SDL_RenderDrawRect(m_renderer, &changedRect);
 }
 
 Uint32 Field::GetColor(const ParticleType type) const
