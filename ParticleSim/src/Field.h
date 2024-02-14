@@ -23,12 +23,9 @@ class Field
     SDL_Rect m_updateArea;
     SDL_Texture* m_texture;
 public:
-    void AddParticles();
     Field();
     ~Field();
 
-    void CleanUp();
-    
     void Update(float dt);
     void CopyTexturePart();
     void Render();
@@ -37,6 +34,8 @@ public:
     void Coord(int i, int& x, int& y) const;
 
     void UpdateTexture(int ind, Uint32 color);
+
+    void SpawnParticle(int x, int y, ParticleType type);
     
 private:
     static Uint32 ColToUint(SDL_Color color);

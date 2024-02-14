@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include "Field.h"
+#include "Particle.h"
 
 TheGame& TheGame::Instance()
 {
@@ -57,7 +58,21 @@ void TheGame::Run()
 void TheGame::Init()
 {
     m_filed = new Field;
-    m_filed->AddParticles();
+    for (int x = 70; x < 100; ++x)
+    {
+        for (int y = 25; y < 50; ++y)
+        {
+            m_filed->SpawnParticle(x, y, ParticleType::Sand);
+        }
+    }
+    
+    for (int x = 100; x < WIDTH; ++x)
+    {
+        for (int y = 20; y < 50; ++y)
+        {
+            m_filed->SpawnParticle(x, y, ParticleType::Water);
+        }
+    }
 }
 
 void TheGame::HandleEvents()
@@ -81,6 +96,12 @@ void TheGame::HandleEvents()
 
 void TheGame::Update(float dt)
 {
+    static int count = 0;
+    if (count < 300)
+    {
+        m_filed->SpawnParticle(100, 20, ParticleType::Sand);
+        count++;
+    }
     m_filed->Update(dt);
     std::cout << "delta time: " << dt << '\n';
 }
@@ -88,9 +109,6 @@ void TheGame::Update(float dt)
 void TheGame::Render()
 {
     SDL_RenderClear(m_renderer);
-    //SDL_Rect r = {100, 100, 100, 100};
-    //SDL_SetRenderDrawColor(m_renderer, 255, 255, 255, 255);
-    //SDL_RenderDrawRect(m_renderer, &r);
     
     m_filed->Render();
     SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 1);
@@ -99,6 +117,5 @@ void TheGame::Render()
 
 void TheGame::CleanUp()
 {
-    m_filed->CleanUp();
     delete m_filed;
 }

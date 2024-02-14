@@ -5,35 +5,6 @@
 #include "Particle.h"
 #include "TheGame.h"
 
-void Field::AddParticles()
-{
-    for (int i = 0; i < m_size; ++i)
-    {
-        m_particles[i].type = ParticleType::None;
-        m_textureColors[i] = ColToUint({0, 0, 0, 255});
-    }
-    
-    for (int x = 170; x < 200; ++x)
-    {
-        for (int y = 50; y < 100; ++y)
-        {
-            m_particles[Ind(x, y)].type = ParticleType::Sand;
-            m_textureColors[Ind(x,y)] = ColToUint({255, 255, 0, 255});
-        }
-    }
-    
-    for (int x = 200; x < m_width; ++x)
-    {
-        for (int y = 50; y < 100; ++y)
-        {
-            m_particles[Ind(x, y)].type = ParticleType::Water;
-            m_textureColors[Ind(x,y)] = ColToUint({0, 0, 255, 255});
-        }
-    }
-    SDL_UpdateTexture(m_texture, nullptr, m_textureColors, m_width * sizeof(Uint32));
-    m_needUpdateTexture = false;
-}
-
 Field::Field()
 {
     m_width = TheGame::WIDTH;
@@ -46,6 +17,13 @@ Field::Field()
     m_particles = new Particle[m_size];
     m_needUpdateTexture = false;
 
+    for (int i = 0; i < m_size; ++i)
+    {
+        m_particles[i].type = ParticleType::None;
+        m_textureColors[i] = ColToUint({0, 0, 0, 255});
+    }
+    
+    
     m_texture = SDL_CreateTexture(m_renderer,  SDL_PIXELFORMAT_RGBA8888,
         SDL_TEXTUREACCESS_STREAMING, m_width, m_height);
 }
@@ -54,53 +32,37 @@ Field::Field()
 
 Field::~Field()
 {
-    
-}
-
-void Field::CleanUp()
-{
     delete[] m_textureColors;
     delete[] m_particles;
     SDL_DestroyTexture(m_texture);
 }
 
-
 void Field::Update(float dt)
 {
     m_frameToUpdateFlag = !m_frameToUpdateFlag;
-    for (int i = 0; i < m_size; ++i)
+    for (int i = m_size- 1; i >= 0; --i)
     {
         if (m_particles[i].type == ParticleType::None) continue;
+        if (m_particles[i].frameToUpdateFlag == m_frameToUpdateFlag) continue;
+        m_particles[i].frameToUpdateFlag = m_frameToUpdateFlag;
+        
         int x, y;
         Coord(i, x, y);
         UpdateParticle(&m_particles[i], x, y);
     }
-    for (int i = 0; i < m_size; ++i)
+    for (int i =  0; i < m_size; ++i)
     {
         if (m_particles[i].type == ParticleType::None) continue;
+        if (m_particles[i].frameToUpdateFlag == m_frameToUpdateFlag) continue;
+        m_particles[i].frameToUpdateFlag = m_frameToUpdateFlag;
+        
         int x, y;
         Coord(i, x, y);
         UpdateParticle(&m_particles[i], x, y);
     }
+
 }
 
-void Field::CopyTexturePart()
-{
-    // SDL_UpdateTexture(m_texture, nullptr, m_textureColors, m_width * sizeof(Uint32))
-    // // make array of colors by rect
-    // Uint32* rectColors = new Uint32[m_updateArea.w * m_updateArea.h];
-    // for (int y = 0; y < m_updateArea.h; ++y)
-    // {
-    //     Uint32* thisLineStart = m_textureColors + ((m_updateArea.y + y) * m_width + m_updateArea.x);
-    //     Uint32* thisLineEnd = m_textureColors + ((m_updateArea.y + y) * m_width + m_updateArea.x + m_updateArea.w);
-    //     Uint32* rectLineStart = rectColors + (y * m_updateArea.w);
-    //     std::copy(thisLineStart, thisLineEnd, rectLineStart);
-    // }
-    //     
-    // SDL_UpdateTexture(m_texture, &m_updateArea, rectColors, m_updateArea.w * sizeof(Uint32));
-    // delete[] rectColors;
-    // m_updateArea = {-1, -1, 0, 0};
-}
 
 void Field::Render()
 {
@@ -110,7 +72,7 @@ void Field::Render()
         SDL_UpdateTexture(m_texture, nullptr, m_textureColors, m_width * sizeof(Uint32));
         m_needUpdateTexture = false;
     }
-    
+
     SDL_RenderCopy(m_renderer, m_texture , nullptr, nullptr);
 }
 
@@ -137,13 +99,15 @@ void Field::UpdateTexture(int ind, Uint32 color)
     m_textureColors[ind] = color;
 }
 
+void Field::SpawnParticle(int x, int y, ParticleType type)
+{
+    int ind = Ind(x,y);
+    m_particles[ind].type= type;
+}
+
 
 void Field::UpdateParticle(Particle* particle, int x, int y)
 {
-    if (particle->frameToUpdateFlag == m_frameToUpdateFlag) return;
-
-    particle->frameToUpdateFlag = m_frameToUpdateFlag;
-    
     switch (particle->type)
     {
     case ParticleType::None:
@@ -169,16 +133,16 @@ void Field::UpdateSand(Particle* particle, int x, int y)
         SwapParticles(ind, indUnder);
         return;
     }
-    const int indUnderRight = Ind(x + 1, y + 1);
-    if (x < m_width - 1 && m_particles[indUnderRight].type == ParticleType::None || m_particles[indUnderRight].type == ParticleType::Water )
-    {
-        SwapParticles(ind, indUnderRight);
-        return;
-    }
     const int indUnderLeft = Ind(x - 1, y + 1);
     if (x > 0 && m_particles[indUnderLeft].type == ParticleType::None || m_particles[indUnderLeft].type == ParticleType::Water )
     {
         SwapParticles(ind, indUnderLeft);
+        return;
+    }
+    const int indUnderRight = Ind(x + 1, y + 1);
+    if (x < m_width - 1 && m_particles[indUnderRight].type == ParticleType::None || m_particles[indUnderRight].type == ParticleType::Water )
+    {
+        SwapParticles(ind, indUnderRight);
         return;
     }
 }
@@ -196,22 +160,21 @@ void Field::UpdateWater(Particle* particle, int x, int y)
 {
     const int ind = Ind(x, y);
     const int indUnder = Ind(x, y + 1);
-    Particle temp = *particle;
     if (y < m_height - 1 && m_particles[indUnder].type == ParticleType::None)
     {
         SwapParticles(ind, indUnder);
-        return;
-    }
-    const int indUnderRight = Ind(x + 1, y + 1);
-    if (y < m_height - 1 && x < m_width - 1 && m_particles[indUnderRight].type == ParticleType::None)
-    {
-        SwapParticles(ind, indUnderRight);
         return;
     }
     const int indUnderLeft = Ind(x - 1, y + 1);
     if (y < m_height - 1 && x > 0 && m_particles[indUnderLeft].type == ParticleType::None)
     {
         SwapParticles(ind, indUnderLeft);
+        return;
+    }
+    const int indUnderRight = Ind(x + 1, y + 1);
+    if (y < m_height - 1 && x < m_width - 1 && m_particles[indUnderRight].type == ParticleType::None)
+    {
+        SwapParticles(ind, indUnderRight);
         return;
     }
     const int indLeft = Ind(x - 1, y);
@@ -242,4 +205,22 @@ Uint32 Field::GetColorByType(const ParticleType type)
         break;
     }
     return 0;
+}
+
+void Field::CopyTexturePart()
+{
+    // SDL_UpdateTexture(m_texture, nullptr, m_textureColors, m_width * sizeof(Uint32))
+    // // make array of colors by rect
+    // Uint32* rectColors = new Uint32[m_updateArea.w * m_updateArea.h];
+    // for (int y = 0; y < m_updateArea.h; ++y)
+    // {
+    //     Uint32* thisLineStart = m_textureColors + ((m_updateArea.y + y) * m_width + m_updateArea.x);
+    //     Uint32* thisLineEnd = m_textureColors + ((m_updateArea.y + y) * m_width + m_updateArea.x + m_updateArea.w);
+    //     Uint32* rectLineStart = rectColors + (y * m_updateArea.w);
+    //     std::copy(thisLineStart, thisLineEnd, rectLineStart);
+    // }
+    //     
+    // SDL_UpdateTexture(m_texture, &m_updateArea, rectColors, m_updateArea.w * sizeof(Uint32));
+    // delete[] rectColors;
+    // m_updateArea = {-1, -1, 0, 0};
 }

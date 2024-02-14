@@ -6,8 +6,8 @@ class Field;
 class TheGame
 {
 public:
-    static const int WIDTH = 400;
-    static const int HEIGHT = 300;
+    static const int WIDTH = 200;
+    static const int HEIGHT = 150;
     
 private:
     bool isRunning;
