@@ -1,9 +1,8 @@
 ﻿#pragma once
-#include <set>
 #include "SDL_render.h"
 
 enum class ParticleType;
-class Particle;
+struct Particle;
 
 
 class Field
@@ -14,20 +13,20 @@ class Field
 
     bool m_frameToUpdateFlag;
     
-    std::set<Particle*> m_activeParticles;
     Particle* m_particles;
-    
+
     SDL_Renderer* m_renderer = nullptr;
-    bool m_needUpdateTexture;
-    Uint32* m_textureColors;
-    SDL_Rect m_updateArea;
     SDL_Texture* m_texture;
+
+    Uint32* m_RawTexturePtr;
+    bool m_isTextureLocked;
+    int m_pitch;
+    
 public:
     Field();
     ~Field();
 
     void Update(float dt);
-    void CopyTexturePart();
     void Render();
 
     int Ind(int x, int y) const;
@@ -41,11 +40,10 @@ private:
     static Uint32 ColToUint(SDL_Color color);
 
 private:
-    void UpdateParticle(Particle* particle, int x, int y);
 
-    void UpdateSand(Particle* particle, int x, int y);
+    void UpdateFall(int x, int y);
+    void UpdateRaise(int x, int y);
+    void UpdateSides(int x, int y);
+    
     void SwapParticles(int ind, int indOther);
-    void UpdateWater(Particle* particle, int x, int y);
-
-    Uint32 GetColorByType(ParticleType type);
 };

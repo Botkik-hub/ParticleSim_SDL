@@ -73,6 +73,20 @@ void TheGame::Init()
             m_filed->SpawnParticle(x, y, ParticleType::Water);
         }
     }
+    for (int x = 0; x < WIDTH; ++x)
+    {
+        for (int y = HEIGHT - 1; y >= HEIGHT - 1 - 10; --y)
+        {
+            m_filed->SpawnParticle(x, y, ParticleType::Steam);
+        }
+    }
+    for (int x = 50; x < 100; ++x)
+    {
+        for (int y = 90; y < 110; ++y)
+        {
+            m_filed->SpawnParticle(x, y, ParticleType::Stone);
+        }
+    }
 }
 
 void TheGame::HandleEvents()
