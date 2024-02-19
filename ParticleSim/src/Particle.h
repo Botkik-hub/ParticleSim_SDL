@@ -26,6 +26,7 @@ struct Particle
     Uint8 Actions;
     bool isActive;
     bool frameToUpdateFlag;
+    
 };
 
 namespace ParticleDefenitions
