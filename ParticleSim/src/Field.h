@@ -1,4 +1,7 @@
 ﻿#pragma once
+#include <algorithm>
+#include <vector>
+
 #include "SDL_render.h"
 
 enum class ParticleType;
@@ -25,12 +28,13 @@ class Field
 public:
     Field();
     ~Field();
+    void UpdateParticle(int x, int y);
 
     void Update(float dt);
     void Render();
 
     int Ind(int x, int y) const;
-    void Coord(int i, int& x, int& y) const;
+    void Cord(int i, int& x, int& y) const;
 
     void UpdateTexture(int ind, Uint32 color);
 

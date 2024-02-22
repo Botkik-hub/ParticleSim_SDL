@@ -1,12 +1,11 @@
 ﻿#include "Field.h"
 
-#include <algorithm>
 #include <iostream>
 
 #include "Particle.h"
 #include "TheGame.h"
 
-Field::Field()
+Field::Field(): m_RawTexturePtr(nullptr)
 {
     m_width = TheGame::WIDTH;
     m_height = TheGame::HEIGHT;
@@ -23,16 +22,15 @@ Field::Field()
     for (int i = 0; i < m_size; ++i)
     {
         m_particles[i].type = ParticleType::None;
-        m_particles[i].Actions = 0;
         textureColors[i] = ColToUint({0, 0, 0, 255});
     }
-    
-    m_texture = SDL_CreateTexture(m_renderer,  SDL_PIXELFORMAT_RGBA8888,
-        SDL_TEXTUREACCESS_STREAMING, m_width, m_height);
+
+    m_texture = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888,
+                                  SDL_TEXTUREACCESS_STREAMING, m_width, m_height);
 
     SDL_UpdateTexture(m_texture, nullptr, textureColors, m_pitch);
+    delete[] textureColors;
 }
-
 
 
 Field::~Field()
@@ -41,41 +39,40 @@ Field::~Field()
     SDL_DestroyTexture(m_texture);
 }
 
+void Field::UpdateParticle(int x, int y)
+{
+    switch (m_particles[Ind(x, y)].type) {
+    case ParticleType::None:
+        break;
+    case ParticleType::Sand:
+        UpdateFall(x,y);
+        break;
+    case ParticleType::Water:
+        UpdateFall(x,y);
+        UpdateSides(x,y);
+        break;
+    case ParticleType::Steam:
+        UpdateRaise(x, y);
+        UpdateSides(x,y);
+        break;
+    case ParticleType::Stone:
+        break;
+    }
+}
+
 void Field::Update(float dt)
 {
     m_frameToUpdateFlag = !m_frameToUpdateFlag;
 
     for (int i = m_size- 1; i >= 0; --i)
     {
-        m_particles[i].isActive = true;
-        if (m_particles[i].Actions & ParticleAction::FALL)
-        {
-            int x, y;
-            Coord(i, x, y);
-            UpdateFall(x,y);
-        }
-    }
-    for (int i = 0; i < m_size; ++i)
-    {
-        if (m_particles[i].Actions & ParticleAction::RISE)
-        {
-            int x, y;
-            Coord(i, x, y);
-            UpdateRaise(x,y);
-        }
-    }    
-    for (int x = 0; x < m_width; ++x)
-    for (int y = 0; y < m_height; ++y)
-    {
-        int i = Ind(x, y);
-        if (!m_particles[i].isActive) continue;
-        
+        if (m_particles[i].frameToUpdateFlag == m_frameToUpdateFlag) continue;
         m_particles[i].frameToUpdateFlag = m_frameToUpdateFlag;
-        if (m_particles[i].Actions & ParticleAction::SIDES)
-        {
-            UpdateSides(x,y);
-        }
-    }  
+        m_particles[i].isActive = true;
+        int x, y;
+        Cord(i, x, y);
+        UpdateParticle(x, y);
+    }
 }
 
 
@@ -100,7 +97,7 @@ int Field::Ind(const int x, const int y) const
     return x + y * m_width;
 }
 
-void Field::Coord(int i, int& x, int& y) const
+void Field::Cord(int i, int& x, int& y) const
 {
     x = i % m_width;
     y = i / m_width;
@@ -110,7 +107,7 @@ void Field::UpdateTexture(int ind, Uint32 color)
 {
     if (!m_isTextureLocked)
     {
-        SDL_LockTexture(m_texture, nullptr, (void**)&m_RawTexturePtr, &m_pitch);
+        SDL_LockTexture(m_texture, nullptr, reinterpret_cast<void**>(&m_RawTexturePtr), &m_pitch);
         m_isTextureLocked = true;
     }
     m_RawTexturePtr[ind] = color;
@@ -120,8 +117,8 @@ void Field::SpawnParticle(int x, int y, ParticleType type)
 {
     const int ind = Ind(x,y);
     m_particles[ind].type= type;
-    m_particles[ind].Actions = ParticleDefenitions::GetActionsByType(type);
-    UpdateTexture(ind, ParticleDefenitions::GetColorByType(type));
+    m_particles[ind].canBeMoved = type != ParticleType::Stone; // TODO this is placeholder
+    UpdateTexture(ind, ParticleDefinitions::GetColorByType(type));
 }
 
 
@@ -131,29 +128,59 @@ void Field::UpdateFall(int x, int y)
 
     const int ind = Ind(x, y);
     const int indUnder = Ind(x, y + 1);
+    const int indUnderLeft = Ind(x - 1, y + 1);
+    const int indUnderRight = Ind(x + 1, y + 1);
 
-    if (m_particles[indUnder].type == ParticleType::None ||
-        ParticleDefenitions::GetParticleDensity(m_particles[ind].type) > ParticleDefenitions::GetParticleDensity(m_particles[indUnder].type) &&
-        !(m_particles[indUnder].Actions & ParticleAction::IMMOVABLE))
+    const bool hasLeft = x < m_width - 1;
+    const bool hasRight = x > 0;
+    
+    if (!m_particles[ind].isActive) return;
+
+    // Drop down
+    if (m_particles[indUnder].type == ParticleType::None)
     {
         m_particles[ind].isActive = false;
         SwapParticles(ind, indUnder);
         return;
     }
-    const int indUnderLeft = Ind(x - 1, y + 1);
-    if (x > 0 &&
+    else if (ParticleDefinitions::GetDensityByType(m_particles[ind].type) > ParticleDefinitions::GetDensityByType(m_particles[indUnder].type) &&
+                         m_particles[indUnder].canBeMoved)
+    {
+        // check if can move left/right
+        const int indLeft = Ind(x - 1, y);
+        const int indRight = Ind(x+1, y);
+        if (hasLeft && m_particles[indLeft].type == ParticleType::None)
+        {
+            m_particles[ind].isActive = true;
+            SwapParticles(indLeft, indUnder);
+            SwapParticles(ind, indUnder);
+            return;
+        }
+        if (hasRight && m_particles[indRight].type == ParticleType::None)
+        {
+             m_particles[ind].isActive = true;
+             SwapParticles(indRight, indUnder);
+             SwapParticles(ind, indUnder);
+             return;   
+        }
+        m_particles[ind].isActive = false;
+        SwapParticles(ind, indUnder);
+        return; 
+    }
+    
+    if (hasRight &&
         (m_particles[indUnderLeft].type == ParticleType::None ||
-        ParticleDefenitions::GetParticleDensity(m_particles[ind].type) > ParticleDefenitions::GetParticleDensity(m_particles[indUnderLeft].type) &&
-        !(m_particles[indUnderLeft].Actions & ParticleAction::IMMOVABLE)))
+        (ParticleDefinitions::GetDensityByType(m_particles[ind].type) > ParticleDefinitions::GetDensityByType(m_particles[indUnderLeft].type) &&
+            m_particles[indUnderLeft].canBeMoved)))
     {
         m_particles[ind].isActive = false;
         SwapParticles(ind, indUnderLeft);
         return;
     }
-    const int indUnderRight = Ind(x + 1, y + 1);
-    if (x < m_width - 1 && (m_particles[indUnderRight].type == ParticleType::None ||
-    ParticleDefenitions::GetParticleDensity(m_particles[ind].type) > ParticleDefenitions::GetParticleDensity(m_particles[indUnderRight].type) &&
-    !(m_particles[indUnderRight].Actions & ParticleAction::IMMOVABLE)))
+    
+    if (hasLeft && (m_particles[indUnderRight].type == ParticleType::None ||
+    (ParticleDefinitions::GetDensityByType(m_particles[ind].type) > ParticleDefinitions::GetDensityByType(m_particles[indUnderRight].type) &&
+        m_particles[indUnderRight].canBeMoved)))
     {
         m_particles[ind].isActive = false;
         SwapParticles(ind, indUnderRight);
@@ -167,10 +194,12 @@ void Field::UpdateRaise(int x, int y)
 
     const int ind = Ind(x, y);
     const int indAbove = Ind(x, y - 1);
-
+    
+    if (!m_particles[ind].isActive) return;
+    
     if (m_particles[indAbove].type == ParticleType::None ||
-        ParticleDefenitions::GetParticleDensity(m_particles[ind].type) < ParticleDefenitions::GetParticleDensity(m_particles[indAbove].type) &&
-        !(m_particles[indAbove].Actions & ParticleAction::IMMOVABLE))
+        (ParticleDefinitions::GetDensityByType(m_particles[ind].type) < ParticleDefinitions::GetDensityByType(m_particles[indAbove].type) &&
+        m_particles[indAbove].canBeMoved))
     {
         m_particles[ind].isActive = false;
         SwapParticles(ind, indAbove);
@@ -179,8 +208,8 @@ void Field::UpdateRaise(int x, int y)
     const int indAboveLeft = Ind(x - 1, y - 1);
     if (x > 0 &&
         (m_particles[indAboveLeft].type == ParticleType::None ||
-        ParticleDefenitions::GetParticleDensity(m_particles[ind].type) < ParticleDefenitions::GetParticleDensity(m_particles[indAboveLeft].type) &&
-        !(m_particles[indAboveLeft].Actions & ParticleAction::IMMOVABLE)))
+        (ParticleDefinitions::GetDensityByType(m_particles[ind].type) < ParticleDefinitions::GetDensityByType(m_particles[indAboveLeft].type) &&
+            m_particles[indAboveLeft].canBeMoved)))
     {
         m_particles[ind].isActive = false;
         SwapParticles(ind, indAboveLeft);
@@ -188,8 +217,8 @@ void Field::UpdateRaise(int x, int y)
     }
     const int indAboveRight = Ind(x + 1, y - 1);
     if (x < m_width - 1 && (m_particles[indAboveRight].type == ParticleType::None ||
-        ParticleDefenitions::GetParticleDensity(m_particles[ind].type) < ParticleDefenitions::GetParticleDensity(m_particles[indAboveRight].type) &&
-        !(m_particles[indAboveRight].Actions & ParticleAction::IMMOVABLE)))
+        (ParticleDefinitions::GetDensityByType(m_particles[ind].type) < ParticleDefinitions::GetDensityByType(m_particles[indAboveRight].type) &&
+            m_particles[indAboveRight].canBeMoved)))
     {
         m_particles[ind].isActive = false;
         SwapParticles(ind, indAboveRight);
@@ -201,6 +230,9 @@ void Field::UpdateSides(int x, int y)
 {
     const int ind = Ind(x, y);
     const int indLeft = Ind(x - 1, y);
+    
+    if (!m_particles[ind].isActive) return;
+    
     if (x > 0 && m_particles[indLeft].type == ParticleType::None)
     {
         m_particles[ind].isActive = false;
@@ -221,6 +253,6 @@ void Field::SwapParticles(const int ind, const int indOther)
     const Particle temp = m_particles[ind];
     m_particles[ind] = m_particles[indOther];
     m_particles[indOther] = temp;
-    UpdateTexture(ind, ParticleDefenitions::GetColorByType(m_particles[ind].type));
-    UpdateTexture(indOther, ParticleDefenitions::GetColorByType(m_particles[indOther].type));
+    UpdateTexture(ind, ParticleDefinitions::GetColorByType(m_particles[ind].type));
+    UpdateTexture(indOther, ParticleDefinitions::GetColorByType(m_particles[indOther].type));
 }

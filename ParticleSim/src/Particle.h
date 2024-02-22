@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "IVec2.h"
 #include "SDL_stdinc.h"
 
 enum class ParticleType
@@ -10,29 +11,17 @@ enum class ParticleType
     Stone
 };
 
-class ParticleAction
-{
-public:
-    static constexpr Uint8 NONE = 0;
-    static constexpr Uint8 FALL = 1 << 0;
-    static constexpr Uint8 RISE = 1 << 1;
-    static constexpr Uint8 SIDES = 1 << 2;
-    static constexpr Uint8 IMMOVABLE = 1 << 3;
-};
-
 struct Particle
 {
     ParticleType type;
-    Uint8 Actions;
+    bool canBeMoved;
+    IVec2 velocity;
     bool isActive;
     bool frameToUpdateFlag;
-    
 };
 
-namespace ParticleDefenitions
+namespace ParticleDefinitions
 {
     Uint32 GetColorByType(const ParticleType type);
-    Uint8 GetActionsByType(ParticleType type);
-    int GetParticleDensity(ParticleType type);
-    
+    int GetDensityByType(const ParticleType type);
 }
