@@ -37,3 +37,26 @@ int ParticleDefinitions::GetDensityByType(const ParticleType type)
         throw std::exception("type is missing");
     }
 }
+
+Uint8 ParticleDefinitions::GetActionsByType(const ParticleType type)
+{
+    switch (type) {
+    case ParticleType::None:
+         return ParticleAction::None;
+    case ParticleType::Sand:
+         return ParticleAction::MoveDown;
+    case ParticleType::Water:
+         return ParticleAction::MoveDown | ParticleAction::MoveSides;
+    case ParticleType::Steam:
+         return ParticleAction::MoveUp | ParticleAction::MoveSides;
+    case ParticleType::Stone:
+         return ParticleAction::Immovable;
+     default:
+         throw std::exception("type is missing");
+     }
+}
+
+bool ParticleDefinitions::CanBeMoved(const Uint8 actions)
+{
+    return (actions & ParticleAction::Immovable) != ParticleAction::Immovable;
+}
