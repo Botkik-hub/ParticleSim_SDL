@@ -41,23 +41,18 @@ Field::~Field()
 
 void Field::UpdateParticle(int x, int y)
 {
-    switch (m_particles[Ind(x, y)].type) {
-    case ParticleType::None:
-        break;
-    case ParticleType::Sand:
-        UpdateFall(x,y);
-        break;
-    case ParticleType::Water:
-        UpdateFall(x,y);
-        UpdateSides(x,y);
-        break;
-    case ParticleType::Steam:
+    const Uint8 actions = m_particles[Ind(x, y)].actions;
+    
+    if (actions == 0) return;
+
+    if ((actions & ParticleAction::MoveDown) != 0)
+        UpdateFall(x, y);
+
+    if ((actions & ParticleAction::MoveUp) != 0)
         UpdateRaise(x, y);
-        UpdateSides(x,y);
-        break;
-    case ParticleType::Stone:
-        break;
-    }
+    
+    if ((actions & ParticleAction::MoveSides) != 0)
+        UpdateSides(x, y);
 }
 
 void Field::Update(float dt)
@@ -66,6 +61,7 @@ void Field::Update(float dt)
 
     for (int i = m_size- 1; i >= 0; --i)
     {
+        if (m_particles[i].type == ParticleType::None) continue;
         if (m_particles[i].frameToUpdateFlag == m_frameToUpdateFlag) continue;
         m_particles[i].frameToUpdateFlag = m_frameToUpdateFlag;
         m_particles[i].isActive = true;
