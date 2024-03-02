@@ -20,7 +20,7 @@ Uint32 ParticleDefinitions::GetColorByType(const ParticleType type)
     }
 }
 
-int ParticleDefinitions::GetDensityByType(const ParticleType type)
+int ParticleDefinitions::GetMassByType(const ParticleType type)
 {
     switch (type) {
     case ParticleType::None:
@@ -42,15 +42,15 @@ Uint8 ParticleDefinitions::GetActionsByType(const ParticleType type)
 {
     switch (type) {
     case ParticleType::None:
-         return ParticleAction::None;
+         return ParticleAction::NONE;
     case ParticleType::Sand:
-         return ParticleAction::MoveDown;
+         return ParticleAction::MOVE_DOWN;
     case ParticleType::Water:
-         return ParticleAction::MoveDown | ParticleAction::MoveSides;
+         return ParticleAction::MOVE_DOWN | ParticleAction::MOVE_SIDES;
     case ParticleType::Steam:
-         return ParticleAction::MoveUp | ParticleAction::MoveSides;
+         return ParticleAction::MOVE_UP | ParticleAction::MOVE_SIDES;
     case ParticleType::Stone:
-         return ParticleAction::Immovable;
+         return ParticleAction::IMMOVABLE;
      default:
          throw std::exception("type is missing");
      }
@@ -58,5 +58,5 @@ Uint8 ParticleDefinitions::GetActionsByType(const ParticleType type)
 
 bool ParticleDefinitions::CanBeMoved(const Uint8 actions)
 {
-    return (actions & ParticleAction::Immovable) != ParticleAction::Immovable;
+    return (actions & ParticleAction::IMMOVABLE) != ParticleAction::IMMOVABLE;
 }

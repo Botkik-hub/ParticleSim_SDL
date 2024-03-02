@@ -39,20 +39,20 @@ Field::~Field()
     SDL_DestroyTexture(m_texture);
 }
 
-void Field::UpdateParticle(int x, int y)
+void Field::UpdateParticle(int x, int y, int index)
 {
     const Uint8 actions = m_particles[Ind(x, y)].actions;
     
     if (actions == 0) return;
 
-    if ((actions & ParticleAction::MoveDown) != 0)
-        UpdateFall(x, y);
+    if ((actions & ParticleAction::MOVE_DOWN) != 0)
+        UpdateFall(x, y, index);
 
-    if ((actions & ParticleAction::MoveUp) != 0)
-        UpdateRaise(x, y);
+    if ((actions & ParticleAction::MOVE_UP) != 0)
+        UpdateRaise(x, y, index);
     
-    if ((actions & ParticleAction::MoveSides) != 0)
-        UpdateSides(x, y);
+    if ((actions & ParticleAction::MOVE_SIDES) != 0)
+        UpdateSides(x, y, index);
 }
 
 void Field::Update(float dt)
@@ -67,7 +67,7 @@ void Field::Update(float dt)
         m_particles[i].isActive = true;
         int x, y;
         Cord(i, x, y);
-        UpdateParticle(x, y);
+        UpdateParticle(x, y, i);
     }
 }
 
@@ -118,11 +118,10 @@ void Field::SpawnParticle(int x, int y, ParticleType type)
 }
 
 
-void Field::UpdateFall(int x, int y)
+void Field::UpdateFall(int x, int y, int index)
 {
     if (y >= m_height - 1) return;
 
-    const int ind = Ind(x, y);
     const int indUnder = Ind(x, y + 1);
     const int indUnderLeft = Ind(x - 1, y + 1);
     const int indUnderRight = Ind(x + 1, y + 1);
@@ -130,16 +129,16 @@ void Field::UpdateFall(int x, int y)
     const bool hasLeft = x < m_width - 1;
     const bool hasRight = x > 0;
     
-    if (!m_particles[ind].isActive) return;
+    if (!m_particles[index].isActive) return;
 
     // Drop down
     if (m_particles[indUnder].type == ParticleType::None)
     {
-        m_particles[ind].isActive = false;
-        SwapParticles(ind, indUnder);
+        m_particles[index].isActive = false;
+        SwapParticles(index, indUnder);
         return;
     }
-    else if (ParticleDefinitions::GetDensityByType(m_particles[ind].type) > ParticleDefinitions::GetDensityByType(m_particles[indUnder].type) &&
+    else if (ParticleDefinitions::GetMassByType(m_particles[index].type) > ParticleDefinitions::GetMassByType(m_particles[indUnder].type) &&
                          ParticleDefinitions::CanBeMoved(m_particles->actions))
     {
         // check if can move left/right
@@ -147,99 +146,97 @@ void Field::UpdateFall(int x, int y)
         const int indRight = Ind(x+1, y);
         if (hasLeft && m_particles[indLeft].type == ParticleType::None)
         {
-            m_particles[ind].isActive = true;
+            m_particles[index].isActive = true;
             SwapParticles(indLeft, indUnder);
-            SwapParticles(ind, indUnder);
+            SwapParticles(index, indUnder);
             return;
         }
         if (hasRight && m_particles[indRight].type == ParticleType::None)
         {
-             m_particles[ind].isActive = true;
+             m_particles[index].isActive = true;
              SwapParticles(indRight, indUnder);
-             SwapParticles(ind, indUnder);
+             SwapParticles(index, indUnder);
              return;   
         }
-        m_particles[ind].isActive = false;
-        SwapParticles(ind, indUnder);
+        m_particles[index].isActive = false;
+        SwapParticles(index, indUnder);
         return; 
     }
     
     if (hasRight &&
         (m_particles[indUnderLeft].type == ParticleType::None ||
-        (ParticleDefinitions::GetDensityByType(m_particles[ind].type) > ParticleDefinitions::GetDensityByType(m_particles[indUnderLeft].type) &&
+        (ParticleDefinitions::GetMassByType(m_particles[index].type) > ParticleDefinitions::GetMassByType(m_particles[indUnderLeft].type) &&
             ParticleDefinitions::CanBeMoved(m_particles[indUnderLeft].actions))))
     {
-        m_particles[ind].isActive = false;
-        SwapParticles(ind, indUnderLeft);
+        m_particles[index].isActive = false;
+        SwapParticles(index, indUnderLeft);
         return;
     }
     
     if (hasLeft && (m_particles[indUnderRight].type == ParticleType::None ||
-    (ParticleDefinitions::GetDensityByType(m_particles[ind].type) > ParticleDefinitions::GetDensityByType(m_particles[indUnderRight].type) &&
+    (ParticleDefinitions::GetMassByType(m_particles[index].type) > ParticleDefinitions::GetMassByType(m_particles[indUnderRight].type) &&
         ParticleDefinitions::CanBeMoved(m_particles[indUnderRight].actions))))
     {
-        m_particles[ind].isActive = false;
-        SwapParticles(ind, indUnderRight);
+        m_particles[index].isActive = false;
+        SwapParticles(index, indUnderRight);
         return;
     }
 }
 
-void Field::UpdateRaise(int x, int y)
+void Field::UpdateRaise(int x, int y, int index)
 {
     if (y <= 0) return;
 
-    const int ind = Ind(x, y);
     const int indAbove = Ind(x, y - 1);
     
-    if (!m_particles[ind].isActive) return;
+    if (!m_particles[index].isActive) return;
     
     if (m_particles[indAbove].type == ParticleType::None ||
-        (ParticleDefinitions::GetDensityByType(m_particles[ind].type) < ParticleDefinitions::GetDensityByType(m_particles[indAbove].type) &&
+        (ParticleDefinitions::GetMassByType(m_particles[index].type) < ParticleDefinitions::GetMassByType(m_particles[indAbove].type) &&
         ParticleDefinitions::CanBeMoved(m_particles[indAbove].actions)))
     {
-        m_particles[ind].isActive = false;
-        SwapParticles(ind, indAbove);
+        m_particles[index].isActive = false;
+        SwapParticles(index, indAbove);
         return;
     }
     const int indAboveLeft = Ind(x - 1, y - 1);
     if (x > 0 &&
         (m_particles[indAboveLeft].type == ParticleType::None ||
-        (ParticleDefinitions::GetDensityByType(m_particles[ind].type) < ParticleDefinitions::GetDensityByType(m_particles[indAboveLeft].type) &&
+        (ParticleDefinitions::GetMassByType(m_particles[index].type) < ParticleDefinitions::GetMassByType(m_particles[indAboveLeft].type) &&
             ParticleDefinitions::CanBeMoved(m_particles[indAboveLeft].actions))))
     {
-        m_particles[ind].isActive = false;
-        SwapParticles(ind, indAboveLeft);
+        m_particles[index].isActive = false;
+        SwapParticles(index, indAboveLeft);
         return;
     }
     const int indAboveRight = Ind(x + 1, y - 1);
     if (x < m_width - 1 && (m_particles[indAboveRight].type == ParticleType::None ||
-        (ParticleDefinitions::GetDensityByType(m_particles[ind].type) < ParticleDefinitions::GetDensityByType(m_particles[indAboveRight].type) &&
+        (ParticleDefinitions::GetMassByType(m_particles[index].type) < ParticleDefinitions::GetMassByType(m_particles[indAboveRight].type) &&
             ParticleDefinitions::CanBeMoved(m_particles[indAboveRight].actions))))
     {
-        m_particles[ind].isActive = false;
-        SwapParticles(ind, indAboveRight);
+        m_particles[index].isActive = false;
+        SwapParticles(index, indAboveRight);
         return;
     }
 }
 
-void Field::UpdateSides(int x, int y)
+void Field::UpdateSides(int x, int y, int index)
 {
-    const int ind = Ind(x, y);
     const int indLeft = Ind(x - 1, y);
     
-    if (!m_particles[ind].isActive) return;
+    if (!m_particles[index].isActive) return;
     
     if (x > 0 && m_particles[indLeft].type == ParticleType::None)
     {
-        m_particles[ind].isActive = false;
-        SwapParticles(ind, indLeft);
+        m_particles[index].isActive = false;
+        SwapParticles(index, indLeft);
         return;
     }
     const int indRight = Ind(x + 1, y);
     if (x < m_width - 1 && m_particles[indRight].type == ParticleType::None)
     {
-        m_particles[ind].isActive = false;
-        SwapParticles(ind, indRight);
+        m_particles[index].isActive = false;
+        SwapParticles(index, indRight);
         return;
     }
 }

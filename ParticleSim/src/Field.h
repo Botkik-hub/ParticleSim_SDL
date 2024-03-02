@@ -28,7 +28,7 @@ class Field
 public:
     Field();
     ~Field();
-    void UpdateParticle(int x, int y);
+    void UpdateParticle(int x, int y, int index);
 
     void Update(float dt);
     void Render();
@@ -44,10 +44,9 @@ private:
     static Uint32 ColToUint(SDL_Color color);
 
 private:
-
-    void UpdateFall(int x, int y);
-    void UpdateRaise(int x, int y);
-    void UpdateSides(int x, int y);
+    void UpdateFall(int x, int y, int index);
+    void UpdateRaise(int x, int y, int index);
+    void UpdateSides(int x, int y, int index);
     
     void SwapParticles(int ind, int indOther);
 };
