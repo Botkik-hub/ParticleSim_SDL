@@ -44,11 +44,11 @@ Uint8 ParticleDefinitions::GetActionsByType(const ParticleType type)
     case ParticleType::None:
          return ParticleAction::NONE;
     case ParticleType::Sand:
-         return ParticleAction::MOVE_DOWN;
+         return ParticleAction::MOVE_DOWN | ParticleAction::MOVE_VERTICAL;
     case ParticleType::Water:
-         return ParticleAction::MOVE_DOWN | ParticleAction::MOVE_SIDES;
+         return ParticleAction::MOVE_DOWN | ParticleAction::MOVE_SIDES | ParticleAction::MOVE_VERTICAL | ParticleAction::MOVE_HORIZONTAL;
     case ParticleType::Steam:
-         return ParticleAction::MOVE_UP | ParticleAction::MOVE_SIDES;
+         return ParticleAction::MOVE_UP | ParticleAction::MOVE_SIDES | ParticleAction::MOVE_VERTICAL | ParticleAction::MOVE_HORIZONTAL;
     case ParticleType::Stone:
          return ParticleAction::IMMOVABLE;
      default:
@@ -59,4 +59,10 @@ Uint8 ParticleDefinitions::GetActionsByType(const ParticleType type)
 bool ParticleDefinitions::CanBeMoved(const Uint8 actions)
 {
     return (actions & ParticleAction::IMMOVABLE) != ParticleAction::IMMOVABLE;
+}
+
+
+bool ParticleDefinitions::HasAction(const Uint8 actions, const Uint8 actionToCheck)
+{
+    return (actions & actionToCheck) != 0;
 }

@@ -26,10 +26,10 @@ void TheGame::Run()
     }
     SDL_Window* win;
 
-    SDL_CreateWindowAndRenderer( 1600, 1200, 0, &win, &m_renderer);
+    SDL_CreateWindowAndRenderer( 800, 600, 0, &win, &m_renderer);
 
 	
-    float dt = 0.0f;
+    m_deltaTime = 0.16f;
 
     Init();
 
@@ -40,19 +40,24 @@ void TheGame::Run()
         const Uint32 frameStart = SDL_GetTicks();
 
         HandleEvents();
-        Update(dt);
+        Update();
         Render();
 
         const Uint32 frameEnd = SDL_GetTicks();
-        dt = static_cast<float>(frameEnd - frameStart) / 1000.0f;
-        if (dt < 0.016)
+        m_deltaTime = static_cast<float>(frameEnd - frameStart) / 1000.0f;
+        if (m_deltaTime  < 0.016)
         {
             const Uint32 time = 16 - (frameEnd - frameStart);
             SDL_Delay(time);
-            dt = 0.016;
+            m_deltaTime = 0.016f;
         }
     }
     CleanUp();
+}
+
+float TheGame::GetDeltaTime() const
+{
+    return m_deltaTime;
 }
 
 void TheGame::Init()
@@ -108,7 +113,7 @@ void TheGame::HandleEvents()
 }
 
 
-void TheGame::Update(float dt)
+void TheGame::Update()
 {
     static int count = 0;
     if (count < 300)
@@ -116,8 +121,8 @@ void TheGame::Update(float dt)
         m_filed->SpawnParticle(100, 20, ParticleType::Sand);
         count++;
     }
-    m_filed->Update(dt);
-    std::cout << "delta time: " << dt << '\n';
+    m_filed->Update();
+    std::cout << "Delta time: " << m_deltaTime << '\n';
 }
 
 void TheGame::Render()

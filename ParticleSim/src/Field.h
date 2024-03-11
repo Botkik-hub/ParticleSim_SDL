@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <vector>
 
+#include "IVec2.h"
 #include "SDL_render.h"
 
 enum class ParticleType;
@@ -28,14 +29,16 @@ class Field
 public:
     Field();
     ~Field();
-    void UpdateParticle(int x, int y, int index);
 
-    void Update(float dt);
+    void Update();
     void Render();
 
     int Ind(int x, int y) const;
+    int Ind(const IVec2& cord) const;
     void Cord(int i, int& x, int& y) const;
 
+    IVec2 Cord(int index) const;
+    
     void UpdateTexture(int ind, Uint32 color);
 
     void SpawnParticle(int x, int y, ParticleType type);
@@ -44,9 +47,20 @@ private:
     static Uint32 ColToUint(SDL_Color color);
 
 private:
+    void UpdateParticle(int x, int y, int index);
+
+    void UpdateVelocity(int index, IVec2 cord);
+
+    void AddVerticalVelocity(int index, IVec2 cord);
+    void AddHorizontalVelocity(int index, IVec2 cord);
+
+    void UpdateMovement(int index, IVec2 cord);
+    
     void UpdateFall(int x, int y, int index);
     void UpdateRaise(int x, int y, int index);
     void UpdateSides(int x, int y, int index);
     
     void SwapParticles(int ind, int indOther);
+
+    bool IsSomethingUnder(IVec2 cord) const;
 };

@@ -2,6 +2,7 @@
 
 #include <iostream>
 
+#include "Config.h"
 #include "Particle.h"
 #include "TheGame.h"
 
@@ -22,6 +23,7 @@ Field::Field(): m_RawTexturePtr(nullptr)
     for (int i = 0; i < m_size; ++i)
     {
         m_particles[i].type = ParticleType::None;
+        m_particles[i].velocity ={0, 0};
         textureColors[i] = ColToUint({0, 0, 0, 255});
     }
 
@@ -41,21 +43,100 @@ Field::~Field()
 
 void Field::UpdateParticle(int x, int y, int index)
 {
-    const Uint8 actions = m_particles[Ind(x, y)].actions;
-    
-    if (actions == 0) return;
-
-    if ((actions & ParticleAction::MOVE_DOWN) != 0)
-        UpdateFall(x, y, index);
-
-    if ((actions & ParticleAction::MOVE_UP) != 0)
-        UpdateRaise(x, y, index);
-    
-    if ((actions & ParticleAction::MOVE_SIDES) != 0)
-        UpdateSides(x, y, index);
+    UpdateVelocity(index, {x, y});
+    UpdateMovement(index, {x, y});
+    // const Uint8 actions = m_particles[Ind(x, y)].actions;
+    //
+    // if (actions == 0) return;
+    //
+    // if ((actions & ParticleAction::MOVE_DOWN) != 0)
+    //     UpdateFall(x, y, index);
+    //
+    // if ((actions & ParticleAction::MOVE_UP) != 0)
+    //     UpdateRaise(x, y, index);
+    //
+    // if ((actions & ParticleAction::MOVE_SIDES) != 0)
+    //     UpdateSides(x, y, index);
 }
 
-void Field::Update(float dt)
+void Field::UpdateVelocity(int index, IVec2 cord)
+{
+    const Uint8 actions = m_particles[index].actions;
+
+    // if no block underneath or up and action is up or down
+    // if not that, check sides if action
+
+    if (ParticleDefinitions::HasAction(actions, ParticleAction::MOVE_VERTICAL))
+    {
+        AddVerticalVelocity(index, cord);
+    }
+
+    // where to do check if should move to sides
+    if (ParticleDefinitions::HasAction(actions, ParticleAction::MOVE_HORIZONTAL))
+    {
+        if (IsSomethingUnder(cord))
+            AddHorizontalVelocity(index, cord);
+    }
+}
+
+void Field::AddVerticalVelocity(const int index, IVec2 cord)
+{
+    const float velocityAdded = ParticleDefinitions::GetMassByType(m_particles[index].type)
+                        *  Config::GRAVITY * TheGame::Instance().GetDeltaTime();
+    m_particles[index].velocity.y += velocityAdded;
+}
+
+void Field::AddHorizontalVelocity(int index, IVec2 cord)
+{
+    const float velocityAdded = ParticleDefinitions::GetMassByType(m_particles[index].type)
+                            *  Config::SIDE_SPEED * TheGame::Instance().GetDeltaTime() / 2;
+    m_particles[index].velocity.x += velocityAdded;
+}
+
+void Field::UpdateMovement(int index, IVec2 cord)
+{
+    int dX = m_particles[index].velocity.x;
+    int dY = m_particles[index].velocity.y;
+
+    // lets move for now all y then all x
+    // TODO move diagonally
+
+    while (dY != 0)
+    {
+        if (dY > 0)
+        {
+            // move down 
+            if (cord.y >= m_height)
+            {
+                m_particles[index].velocity.x = 0;
+                break;
+            }
+            UpdateFall(cord.x, cord.y, index);
+            dY -= 1;
+        }
+        else
+        {
+            // move up
+             if (cord.y < 0)
+             {
+                 m_particles[index].velocity.x = 0;
+                 break;
+             }
+             UpdateRaise(cord.x, cord.y, index);
+             dY += 1;   
+        }
+    }
+    while (dX != 0)
+    {
+         UpdateSides(cord.x, cord.y, index);
+        if (dX > 0)
+            dX -= 1;
+        else
+            dX += 1;
+     }
+}
+
+void Field::Update()
 {
     m_frameToUpdateFlag = !m_frameToUpdateFlag;
 
@@ -93,10 +174,22 @@ int Field::Ind(const int x, const int y) const
     return x + y * m_width;
 }
 
+int Field::Ind(const IVec2& cord) const
+{
+    return cord.x + cord.y * m_width;
+}
+
 void Field::Cord(int i, int& x, int& y) const
 {
     x = i % m_width;
     y = i / m_width;
+}
+
+IVec2 Field::Cord(const int index) const
+{
+    return {
+    index % m_width,
+      index / m_width};  
 }
 
 void Field::UpdateTexture(int ind, Uint32 color)
@@ -248,4 +341,13 @@ void Field::SwapParticles(const int ind, const int indOther)
     m_particles[indOther] = temp;
     UpdateTexture(ind, ParticleDefinitions::GetColorByType(m_particles[ind].type));
     UpdateTexture(indOther, ParticleDefinitions::GetColorByType(m_particles[indOther].type));
+}
+
+bool Field::IsSomethingUnder(const IVec2 cord) const
+{
+    if (cord.y == m_height - 1)
+        return true;
+
+    return m_particles[Ind(cord.x, cord.y)].type != ParticleType::None;
+   
 }

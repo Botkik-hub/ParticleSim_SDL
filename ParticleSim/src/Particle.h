@@ -1,6 +1,6 @@
 ﻿#pragma once
-#include "IVec2.h"
 #include "SDL_stdinc.h"
+#include "Vec2.h"
 
 enum class ParticleType
 {
@@ -19,14 +19,20 @@ public:
     static constexpr Uint8 MOVE_DOWN = 1 << 1;
     static constexpr Uint8 MOVE_SIDES = 1 << 2;
     static constexpr Uint8 MOVE_UP = 1 << 3;
+    static constexpr Uint8 MOVE_VERTICAL = 1 << 4;
+    static constexpr Uint8 MOVE_HORIZONTAL = 1 << 5;
 };
 struct Particle
 {
     ParticleType type;
     Uint8 actions;
-    IVec2 velocity;
+    Vec2 velocity;
     bool isActive;
     bool frameToUpdateFlag;
+    union
+    {
+        // not used for now can have properties of other stuff
+    };
 };
 
 namespace ParticleDefinitions
@@ -35,4 +41,7 @@ namespace ParticleDefinitions
     int GetMassByType(ParticleType type);
     Uint8 GetActionsByType(ParticleType type);
     bool CanBeMoved(Uint8);
+    
+    // mb should be not here
+    bool HasAction(Uint8 actions, const Uint8 actionToCheck);
 }
