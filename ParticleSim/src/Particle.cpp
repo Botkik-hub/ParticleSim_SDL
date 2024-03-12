@@ -44,17 +44,18 @@ Uint8 ParticleDefinitions::GetActionsByType(const ParticleType type)
     case ParticleType::None:
          return ParticleAction::NONE;
     case ParticleType::Sand:
-         return ParticleAction::MOVE_DOWN | ParticleAction::MOVE_VERTICAL;
+         return ParticleAction::MOVE_VERTICAL | ParticleAction::IS_SOLID;
     case ParticleType::Water:
-         return ParticleAction::MOVE_DOWN | ParticleAction::MOVE_SIDES | ParticleAction::MOVE_VERTICAL | ParticleAction::MOVE_HORIZONTAL;
+         return ParticleAction::MOVE_VERTICAL | ParticleAction::MOVE_HORIZONTAL | ParticleAction::IS_LIQUID;
     case ParticleType::Steam:
-         return ParticleAction::MOVE_UP | ParticleAction::MOVE_SIDES | ParticleAction::MOVE_VERTICAL | ParticleAction::MOVE_HORIZONTAL;
+         return ParticleAction::MOVE_VERTICAL | ParticleAction::MOVE_HORIZONTAL | ParticleAction::IS_GAS;
     case ParticleType::Stone:
-         return ParticleAction::IMMOVABLE;
+         return ParticleAction::IMMOVABLE | ParticleAction::IS_SOLID;
      default:
          throw std::exception("type is missing");
      }
 }
+
 
 bool ParticleDefinitions::CanBeMoved(const Uint8 actions)
 {
@@ -65,4 +66,19 @@ bool ParticleDefinitions::CanBeMoved(const Uint8 actions)
 bool ParticleDefinitions::HasAction(const Uint8 actions, const Uint8 actionToCheck)
 {
     return (actions & actionToCheck) != 0;
+}
+
+bool ParticleDefinitions::IsGas(const Uint8 actions)
+{
+    return (actions & ParticleAction::IS_GAS) == ParticleAction::IS_GAS;
+}
+
+bool ParticleDefinitions::IsLiquid(const Uint8 actions)
+{
+    return (actions & ParticleAction::IS_LIQUID) == ParticleAction::IS_LIQUID;
+}
+
+bool ParticleDefinitions::IsSolid(const Uint8 actions)
+{
+    return (actions & ParticleAction::IS_SOLID) == ParticleAction::IS_SOLID;
 }

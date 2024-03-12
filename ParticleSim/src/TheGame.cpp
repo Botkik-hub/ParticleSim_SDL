@@ -1,4 +1,6 @@
 ﻿#include "TheGame.h"
+
+#include <complex>
 #include <cstdio>
 #include <iostream>
 #include <SDL.h>
@@ -26,7 +28,7 @@ void TheGame::Run()
     }
     SDL_Window* win;
 
-    SDL_CreateWindowAndRenderer( 800, 600, 0, &win, &m_renderer);
+    SDL_CreateWindowAndRenderer( WINDOW_WIDTH, WINDOW_HEIGHT, 0, &win, &m_renderer);
 
 	
     m_deltaTime = 0.16f;
@@ -94,6 +96,48 @@ void TheGame::Init()
     }
 }
 
+void TheGame::SpawnParticlesInLine(IVec2 start, IVec2 end) const
+{
+    int dx = std::abs(end.x - start.x);
+    int dy = -std::abs(end.y - start.y);
+
+    IVec2 s;
+    if (start.x < end.x)
+        s.x = 1;
+    else
+        s.x = -1;
+
+    if (start.y < end.y)
+        s.y = 1;
+    else
+        s.y = -1;
+
+    int error = dx + dy;
+
+    while (true)
+    {
+        m_filed->SpawnParticle(start.x, start.y, ParticleType::Stone);
+
+        if (start == end) break;
+
+        const int error2 = error + error;
+        if (error2 >= dy)
+        {
+            if (start.x == end.x) break;
+
+            error = error + dy;
+            start.x = start.x + s.x;
+        }
+        if (error2 <= dx)
+        {
+            if (start.y == end.y) break;
+
+            error = error + dx;
+            start.y = start.y + s.y;
+        }
+    }
+}
+
 void TheGame::HandleEvents()
 {
     SDL_Event event;
@@ -101,6 +145,9 @@ void TheGame::HandleEvents()
     {
         switch (event.type)
         {
+        case SDL_MOUSEBUTTONDOWN:
+            OnMouseClick();
+            break;
         case SDL_QUIT:
             isRunning = false;
             break;
@@ -112,6 +159,24 @@ void TheGame::HandleEvents()
     }
 }
 
+void TheGame::OnMouseClick()
+{
+    int x ;
+    int y;
+    SDL_GetMouseState(&x, &y);
+    x = x * WIDTH / WINDOW_WIDTH;
+    y = y * HEIGHT / WINDOW_HEIGHT;
+    if (m_wasClicked)
+    {
+        SpawnParticlesInLine({x , y}, m_mousePos);
+        m_wasClicked = false;
+    }
+    else
+    {
+        m_mousePos = {x, y};
+        m_wasClicked = true;
+    }
+}
 
 void TheGame::Update()
 {

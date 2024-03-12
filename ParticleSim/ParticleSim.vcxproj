@@ -176,6 +176,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\Field.cpp" />
+    <ClCompile Include="src\FieldUtil.cpp" />
     <ClCompile Include="src\IVec2.cpp" />
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\Particle.cpp" />

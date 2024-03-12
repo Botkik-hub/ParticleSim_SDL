@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include <algorithm>
+
 #include <vector>
 
 #include "IVec2.h"
@@ -15,9 +15,7 @@ class Field
     int m_height;
     int m_size;
 
-    bool m_frameToUpdateFlag;
-    
-    Particle* m_particles;
+    Particle** m_particlesGrid;
 
     SDL_Renderer* m_renderer = nullptr;
     SDL_Texture* m_texture;
@@ -25,6 +23,8 @@ class Field
     Uint32* m_RawTexturePtr;
     bool m_isTextureLocked;
     int m_pitch;
+
+    std::vector<Particle> m_particles;
     
 public:
     Field();
@@ -47,14 +47,16 @@ private:
     static Uint32 ColToUint(SDL_Color color);
 
 private:
+    void UpdateParticle(Particle& particle);
+    
+
+    static void AddVerticalVelocity(Particle& particle);
+    static void AddHorizontalVelocity(Particle& particle);
+    // OLD STUFF
+
+    void MoveParticle(Particle& particle);
+private:
     void UpdateParticle(int x, int y, int index);
-
-    void UpdateVelocity(int index, IVec2 cord);
-
-    void AddVerticalVelocity(int index, IVec2 cord);
-    void AddHorizontalVelocity(int index, IVec2 cord);
-
-    void UpdateMovement(int index, IVec2 cord);
     
     void UpdateFall(int x, int y, int index);
     void UpdateRaise(int x, int y, int index);
@@ -63,4 +65,12 @@ private:
     void SwapParticles(int ind, int indOther);
 
     bool IsSomethingUnder(IVec2 cord) const;
+
+    bool CanGoDown(int index, IVec2 cord, int& indexToMove) const;
+
+    bool CanSwapParticles(const Particle& particle, const IVec2& direction) const;
 };
+
+// todo this is plan how to organize particles 
+// have all particles in array and a field with links to the particles
+// have a linked list of particles that can be updated

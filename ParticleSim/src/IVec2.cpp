@@ -54,6 +54,11 @@ IVec2::operator Vec2() const
     return {static_cast<float>(x), static_cast<float>(y)};
 }
 
+bool IVec2::operator==(const IVec2& other) const
+{
+    return x == other.x && y == other.y;
+}
+
 IVec2::IVec2()
 = default;
 

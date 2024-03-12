@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "IVec2.h"
 #include "SDL_render.h"
 
 class Field;
@@ -9,6 +10,9 @@ public:
     static const int WIDTH = 200;
     static const int HEIGHT = 150;
 
+    static const int WINDOW_WIDTH = 800;
+    static const int WINDOW_HEIGHT = 600;
+    
 private:
     bool isRunning;
     SDL_Renderer* m_renderer;
@@ -16,6 +20,9 @@ private:
     Field* m_filed;
 
     float m_deltaTime;
+
+    IVec2 m_mousePos;
+    bool m_wasClicked = false;
 public:
 
     static TheGame& Instance();
@@ -26,8 +33,10 @@ public:
     float GetDeltaTime() const;
 private:
     void Init();
+    void SpawnParticlesInLine(IVec2 start, IVec2 end) const;
 
     void HandleEvents();
+    void OnMouseClick();
     void Update();
     void Render();
 
