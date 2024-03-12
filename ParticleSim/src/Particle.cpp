@@ -1,6 +1,7 @@
 ﻿#include "Particle.h"
 
 #include <exception>
+#include <iostream>
 
 Uint32 ParticleDefinitions::GetColorByType(const ParticleType type)
 {
@@ -65,20 +66,21 @@ bool ParticleDefinitions::CanBeMoved(const Uint8 actions)
 
 bool ParticleDefinitions::HasAction(const Uint8 actions, const Uint8 actionToCheck)
 {
-    return (actions & actionToCheck) != 0;
+    return (actions & actionToCheck) == actionToCheck;
 }
 
 bool ParticleDefinitions::IsGas(const Uint8 actions)
 {
-    return (actions & ParticleAction::IS_GAS) == ParticleAction::IS_GAS;
+    return (actions & ParticleAction::TYPE_MASK) == ParticleAction::IS_GAS;
 }
 
-bool ParticleDefinitions::IsLiquid(const Uint8 actions)
+bool ParticleDefinitions::
+IsLiquid(const Uint8 actions)
 {
-    return (actions & ParticleAction::IS_LIQUID) == ParticleAction::IS_LIQUID;
+    return (actions & ParticleAction::TYPE_MASK) == ParticleAction::IS_LIQUID;
 }
 
 bool ParticleDefinitions::IsSolid(const Uint8 actions)
 {
-    return (actions & ParticleAction::IS_SOLID) == ParticleAction::IS_SOLID;
+    return (actions & ParticleAction::TYPE_MASK) == ParticleAction::IS_SOLID;
 }

@@ -68,6 +68,25 @@ void Field::SwapParticles(const int ind, const int indOther)
     {
         m_particlesGrid[ind]->position = Cord(ind);
         UpdateTexture(ind, ParticleDefinitions::GetColorByType(m_particlesGrid[ind]->type));
+        m_particlesGrid[ind]->isGrounded = false;
+        m_particlesGrid[ind]->isActive = true;
+        for (int dx = -1; dx <= 1; dx++)
+        {
+            int x = m_particlesGrid[ind]->position.x + dx;
+            if (x < 0 || x >= m_width) continue;
+            
+            for (int dy = -1; dy <= 1; dy++)
+            {
+                int y = m_particlesGrid[ind]->position.y + dy;
+                if (y < 0 || y >= m_height) continue;
+    
+                Particle* particle = m_particlesGrid[Ind(x, y)];
+                if (particle != nullptr)
+                {
+                    particle->isActive = true;
+                }
+            }
+        }
     }
     else
     {
@@ -77,9 +96,29 @@ void Field::SwapParticles(const int ind, const int indOther)
     {
         m_particlesGrid[indOther]->position = Cord(indOther);
         UpdateTexture(indOther, ParticleDefinitions::GetColorByType(m_particlesGrid[indOther]->type));
+        m_particlesGrid[indOther]->isGrounded = false;
+        m_particlesGrid[indOther]->isActive = true;
+        for (int dx = -1; dx <= 1; dx++)
+        {
+            int x = m_particlesGrid[indOther]->position.x + dx;
+            if (x < 0 || x >= m_width) continue;
+            
+            for (int dy = -1; dy <= 1; dy++)
+            {
+                int y = m_particlesGrid[indOther]->position.y + dy;
+                if (y < 0 || y >= m_height) continue;
+    
+                Particle* particle = m_particlesGrid[Ind(x, y)];
+                if (particle != nullptr)
+                {
+                    particle->isActive = true;
+                }
+            }
+        }
     }
     else
     {
         UpdateTexture(indOther, ParticleDefinitions::GetColorByType(ParticleType::None));
     }
+    
 }

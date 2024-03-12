@@ -48,25 +48,13 @@ private:
 
 private:
     void UpdateParticle(Particle& particle);
-    
 
     static void AddVerticalVelocity(Particle& particle);
     static void AddHorizontalVelocity(Particle& particle);
-    // OLD STUFF
 
     void MoveParticle(Particle& particle);
-private:
-    void UpdateParticle(int x, int y, int index);
-    
-    void UpdateFall(int x, int y, int index);
-    void UpdateRaise(int x, int y, int index);
-    void UpdateSides(int x, int y, int index);
     
     void SwapParticles(int ind, int indOther);
-
-    bool IsSomethingUnder(IVec2 cord) const;
-
-    bool CanGoDown(int index, IVec2 cord, int& indexToMove) const;
 
     bool CanSwapParticles(const Particle& particle, const IVec2& direction) const;
 };

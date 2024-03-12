@@ -65,6 +65,8 @@ float TheGame::GetDeltaTime() const
 void TheGame::Init()
 {
     m_filed = new Field;
+
+    
     for (int x = 70; x < 100; ++x)
     {
         for (int y = 25; y < 50; ++y)

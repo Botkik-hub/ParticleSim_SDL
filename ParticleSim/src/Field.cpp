@@ -79,6 +79,11 @@ void Field::UpdateParticle(Particle& particle)
                                                                   }
         MoveParticle(particle);
     }
+    else
+    {
+        // todo  remove this and add other updates 
+        particle.isActive = false;
+    }
 }
 
 void Field::AddVerticalVelocity(Particle& particle)
@@ -97,6 +102,7 @@ void Field::AddHorizontalVelocity(Particle& particle)
 
 void Field::MoveParticle(Particle& particle)
 {
+    IVec2 beginningPos = particle.position;
     int vX = (int)particle.velocity.x;
     int vY = (int)particle.velocity.y;
 
@@ -142,6 +148,7 @@ void Field::MoveParticle(Particle& particle)
                 {
                     start.x = end.x;
                     dx = 0;
+                    particle.velocity.x = 0;
                     error = dy;
                 }
                 if (change.y != 0)
@@ -149,6 +156,7 @@ void Field::MoveParticle(Particle& particle)
                     start.y = end.y;
                     dy = 0;
                     error = dx;
+                    particle.velocity.y = 0;
                     particle.isGrounded = true;
                 }
             }
@@ -174,138 +182,8 @@ void Field::MoveParticle(Particle& particle)
             // start.y = start.y + s.y;
         }
     }
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-void Field::UpdateFall(int x, int y, int index)
-{
-//     if (y >= m_height - 1) return;
-//
-//     const int indUnder = Ind(x, y + 1);
-//     const int indUnderLeft = Ind(x - 1, y + 1);
-//     const int indUnderRight = Ind(x + 1, y + 1);
-//
-//     const bool hasLeft = x < m_width - 1;
-//     const bool hasRight = x > 0;
-//     
-//     if (!m_particles[index].isActive) return;
-//
-//     // Drop down
-//     if (m_particles[indUnder].type == ParticleType::None)
-//     {
-//         m_particles[index].isActive = false;
-//         SwapParticles(index, indUnder);
-//         return;
-//     }
-//     else if (ParticleDefinitions::GetMassByType(m_particles[index].type) > ParticleDefinitions::GetMassByType(m_particles[indUnder].type) &&
-//                          ParticleDefinitions::CanBeMoved(m_particles->actions))
-//     {
-//         // check if can move left/right
-//         const int indLeft = Ind(x - 1, y);
-//         const int indRight = Ind(x+1, y);
-//         if (hasLeft && m_particles[indLeft].type == ParticleType::None)
-//         {
-//             m_particles[index].isActive = true;
-//             SwapParticles(indLeft, indUnder);
-//             SwapParticles(index, indUnder);
-//             return;
-//         }
-//         if (hasRight && m_particles[indRight].type == ParticleType::None)
-//         {
-//              m_particles[index].isActive = true;
-//              SwapParticles(indRight, indUnder);
-//              SwapParticles(index, indUnder);
-//              return;   
-//         }
-//         m_particles[index].isActive = false;
-//         SwapParticles(index, indUnder);
-//         return; 
-//     }
-//     
-//     if (hasRight &&
-//         (m_particles[indUnderLeft].type == ParticleType::None ||
-//         (ParticleDefinitions::GetMassByType(m_particles[index].type) > ParticleDefinitions::GetMassByType(m_particles[indUnderLeft].type) &&
-//             ParticleDefinitions::CanBeMoved(m_particles[indUnderLeft].actions))))
-//     {
-//         m_particles[index].isActive = false;
-//         SwapParticles(index, indUnderLeft);
-//         return;
-//     }
-//     
-//     if (hasLeft && (m_particles[indUnderRight].type == ParticleType::None ||
-//     (ParticleDefinitions::GetMassByType(m_particles[index].type) > ParticleDefinitions::GetMassByType(m_particles[indUnderRight].type) &&
-//         ParticleDefinitions::CanBeMoved(m_particles[indUnderRight].actions))))
-//     {
-//         m_particles[index].isActive = false;
-//         SwapParticles(index, indUnderRight);
-//         return;
-//     }
-}
-
-void Field::UpdateRaise(int x, int y, int index)
-{
-    // if (y <= 0) return;
-    //
-    // const int indAbove = Ind(x, y - 1);
-    //
-    // if (!m_particles[index].isActive) return;
-    //
-    // if (m_particles[indAbove].type == ParticleType::None ||
-    //     (ParticleDefinitions::GetMassByType(m_particles[index].type) < ParticleDefinitions::GetMassByType(m_particles[indAbove].type) &&
-    //     ParticleDefinitions::CanBeMoved(m_particles[indAbove].actions)))
-    // {
-    //     m_particles[index].isActive = false;
-    //     SwapParticles(index, indAbove);
-    //     return;
-    // }
-    // const int indAboveLeft = Ind(x - 1, y - 1);
-    // if (x > 0 &&
-    //     (m_particles[indAboveLeft].type == ParticleType::None ||
-    //     (ParticleDefinitions::GetMassByType(m_particles[index].type) < ParticleDefinitions::GetMassByType(m_particles[indAboveLeft].type) &&
-    //         ParticleDefinitions::CanBeMoved(m_particles[indAboveLeft].actions))))
-    // {
-    //     m_particles[index].isActive = false;
-    //     SwapParticles(index, indAboveLeft);
-    //     return;
-    // }
-    // const int indAboveRight = Ind(x + 1, y - 1);
-    // if (x < m_width - 1 && (m_particles[indAboveRight].type == ParticleType::None ||
-    //     (ParticleDefinitions::GetMassByType(m_particles[index].type) < ParticleDefinitions::GetMassByType(m_particles[indAboveRight].type) &&
-    //         ParticleDefinitions::CanBeMoved(m_particles[indAboveRight].actions))))
-    // {
-    //     m_particles[index].isActive = false;
-    //     SwapParticles(index, indAboveRight);
-    //     return;
-    // }
-}
-
-void Field::UpdateSides(int x, int y, int index)
-{
-    const int indLeft = Ind(x - 1, y);
-    
-    if (!m_particles[index].isActive) return;
-    
-    if (x > 0 && m_particles[indLeft].type == ParticleType::None)
-    {
-        m_particles[index].isActive = false;
-        SwapParticles(index, indLeft);
-        return;
-    }
-    const int indRight = Ind(x + 1, y);
-    if (x < m_width - 1 && m_particles[indRight].type == ParticleType::None)
-    {
-        m_particles[index].isActive = false;
-        SwapParticles(index, indRight);
-        return;
-    }
-}
-
-bool Field::IsSomethingUnder(const IVec2 cord) const
-{
-    if (cord.y == m_height - 1)
-        return true;
-    return m_particles[Ind(cord.x, cord.y)].type != ParticleType::None;
+    if (particle.velocity == Vec2(0, 0))
+        particle.isActive = false;
 }
 
 bool Field::CanSwapParticles(const Particle& particle, const IVec2& direction) const
@@ -330,6 +208,11 @@ bool Field::CanSwapParticles(const Particle& particle, const IVec2& direction) c
 
     const Uint8 actions = GetActionsByType(particle.type);
     const Uint8 otherActions = GetActionsByType(otherParticle->type);
+
+    if (HasAction(otherActions, ParticleAction::IMMOVABLE))
+    {
+        return false;
+    }
     
     if (IsGas(actions))
     {
@@ -373,6 +256,10 @@ bool Field::CanSwapParticles(const Particle& particle, const IVec2& direction) c
     }
     else if (IsSolid(actions))
     {
+        if (particle.type == ParticleType::Sand && otherParticle->type == ParticleType::Water)
+        {
+            return true;
+        }
         if (IsSolid(otherActions))
         {
             return false;

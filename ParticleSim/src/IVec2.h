@@ -15,6 +15,7 @@ struct IVec2
    IVec2 operator/(int other) const;
 
    operator Vec2() const;
+   
    bool operator==(const IVec2& other) const;
 
    IVec2();

@@ -23,6 +23,7 @@ public:
     static constexpr Uint8 IS_LIQUID        = 0b10000000;
     static constexpr Uint8 IS_GAS           = 0b01000000;
     static constexpr Uint8 IS_SOLID         = 0b11000000;
+    static constexpr Uint8 TYPE_MASK        = 0b11000000;
 };
 
 struct Particle
@@ -30,7 +31,7 @@ struct Particle
     ParticleType type;
     IVec2 position;
     Vec2 velocity;
-    bool isActive;
+    bool isActive = true;
     bool isGrounded;
     union
     {

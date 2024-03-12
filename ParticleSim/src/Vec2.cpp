@@ -34,6 +34,11 @@ Vec2 Vec2::operator/(const float other) const
     return result;
 }
 
+bool Vec2::operator==(const Vec2& other) const
+{
+    return other.x == x && other.y == y;  // NOLINT(clang-diagnostic-float-equal)
+}
+
 Vec2::operator IVec2() const
 {
     return {static_cast<int>(x), static_cast<int>(y)};
