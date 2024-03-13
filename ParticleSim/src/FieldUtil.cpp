@@ -36,8 +36,30 @@ void Field::UpdateTexture(const int ind, const Uint32 color)
     {
         SDL_LockTexture(m_texture, nullptr, reinterpret_cast<void**>(&m_RawTexturePtr), &m_pitch);
         m_isTextureLocked = true;
+        
+#if ACTIVE_PARTICLES_DEBUG_VIEW
+        SDL_LockTexture(d_debugActiveTexture, nullptr, reinterpret_cast<void**>(&d_debugRawTexturePointer), &m_pitch);
+#endif
     }
     m_RawTexturePtr[ind] = color;
+    
+#if ACTIVE_PARTICLES_DEBUG_VIEW
+    if (m_particlesGrid[ind] == nullptr)
+    {
+        d_debugRawTexturePointer[ind] = 0;
+    }
+    else
+    {
+        if (m_particlesGrid[ind]->isActive)
+        {
+            d_debugRawTexturePointer[ind] = 0 << 24 | 255 << 16 | 0 << 8 | 255;
+        }
+        else
+        {
+            d_debugRawTexturePointer[ind] = 255 << 24 | 0 << 16 | 0 << 8 | 255;
+        }
+    }
+#endif
 }
 
 void Field::SpawnParticle(int x, int y, const ParticleType type)
@@ -56,37 +78,19 @@ void Field::SpawnParticle(int x, int y, const ParticleType type)
 
 void Field::SwapParticles(const int ind, const int indOther)
 {
-    Particle* one = m_particlesGrid[ind];
-    Particle* two = m_particlesGrid[indOther];
-    
     Particle* temp = m_particlesGrid[ind];
     m_particlesGrid[ind] = m_particlesGrid[indOther];
     m_particlesGrid[indOther] = temp;
 
+    const IVec2 pos = Cord(ind);
+    const IVec2 posOther = Cord(indOther);
     // swap positions here
     if (m_particlesGrid[ind] != nullptr)
     {
-        m_particlesGrid[ind]->position = Cord(ind);
+        m_particlesGrid[ind]->position = pos;
         UpdateTexture(ind, ParticleDefinitions::GetColorByType(m_particlesGrid[ind]->type));
         m_particlesGrid[ind]->isGrounded = false;
         m_particlesGrid[ind]->isActive = true;
-        for (int dx = -1; dx <= 1; dx++)
-        {
-            int x = m_particlesGrid[ind]->position.x + dx;
-            if (x < 0 || x >= m_width) continue;
-            
-            for (int dy = -1; dy <= 1; dy++)
-            {
-                int y = m_particlesGrid[ind]->position.y + dy;
-                if (y < 0 || y >= m_height) continue;
-    
-                Particle* particle = m_particlesGrid[Ind(x, y)];
-                if (particle != nullptr)
-                {
-                    particle->isActive = true;
-                }
-            }
-        }
     }
     else
     {
@@ -94,31 +98,49 @@ void Field::SwapParticles(const int ind, const int indOther)
     }
     if (m_particlesGrid[indOther] != nullptr)
     {
-        m_particlesGrid[indOther]->position = Cord(indOther);
+        m_particlesGrid[indOther]->position = posOther;
         UpdateTexture(indOther, ParticleDefinitions::GetColorByType(m_particlesGrid[indOther]->type));
         m_particlesGrid[indOther]->isGrounded = false;
         m_particlesGrid[indOther]->isActive = true;
-        for (int dx = -1; dx <= 1; dx++)
-        {
-            int x = m_particlesGrid[indOther]->position.x + dx;
-            if (x < 0 || x >= m_width) continue;
-            
-            for (int dy = -1; dy <= 1; dy++)
-            {
-                int y = m_particlesGrid[indOther]->position.y + dy;
-                if (y < 0 || y >= m_height) continue;
-    
-                Particle* particle = m_particlesGrid[Ind(x, y)];
-                if (particle != nullptr)
-                {
-                    particle->isActive = true;
-                }
-            }
-        }
     }
     else
     {
         UpdateTexture(indOther, ParticleDefinitions::GetColorByType(ParticleType::None));
     }
-    
+    for (int dx = -1; dx <= 1; dx++)
+    {
+        const int x = pos.x + dx;
+        if (x < 0 || x >= m_width) continue;
+        
+        for (int dy = -1; dy <= 1; dy++)
+        {
+            const int y = pos.y + dy;
+            if (y < 0 || y >= m_height) continue;
+
+            Particle* particle = m_particlesGrid[Ind(x, y)];
+            if (particle != nullptr)
+            {
+                particle->isActive = true;
+                particle->isGrounded = false;
+            }
+        }
+    }
+    for (int dx = -1; dx <= 1; dx++)
+    {
+        const int x = posOther.x + dx;
+        if (x < 0 || x >= m_width) continue;
+        
+        for (int dy = -1; dy <= 1; dy++)
+        {
+            const int y = posOther.y + dy;
+            if (y < 0 || y >= m_height) continue;
+
+            Particle* particle = m_particlesGrid[Ind(x, y)];
+            if (particle != nullptr)
+            {
+                particle->isActive = true;
+                particle->isGrounded = false;
+            }
+        }
+    }
 }

@@ -62,7 +62,6 @@ bool IVec2::operator==(const IVec2& other) const
 IVec2::IVec2()
 = default;
 
-IVec2::IVec2(int x, int y) : x(x), y(y)
+IVec2::IVec2(const int x, const int y) : x(x), y(y)
 {
-    
 }

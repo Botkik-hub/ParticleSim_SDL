@@ -7,6 +7,7 @@
 #include "SDL_egl.h"
 #include "TheGame.h"
 
+
 using namespace ParticleDefinitions;
 
 Field::Field(): m_RawTexturePtr(nullptr)
@@ -33,12 +34,22 @@ Field::Field(): m_RawTexturePtr(nullptr)
 
     SDL_UpdateTexture(m_texture, nullptr, textureColors, m_pitch);
     delete[] textureColors;
+
+#if ACTIVE_PARTICLES_DEBUG_VIEW
+    d_debugActiveTexture = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888,
+        SDL_TEXTUREACCESS_STREAMING, m_width, m_height);
+    SDL_SetTextureAlphaMod(d_debugActiveTexture, 128);
+    SDL_SetTextureBlendMode(d_debugActiveTexture, SDL_BLENDMODE_BLEND);
+#endif
 }
 
 Field::~Field()
 {
     delete[] m_particlesGrid;
     SDL_DestroyTexture(m_texture);
+#if ACTIVE_PARTICLES_DEBUG_VIEW
+    SDL_DestroyTexture(d_debugActiveTexture);
+#endif
 }
 
 void Field::Render()
@@ -46,10 +57,17 @@ void Field::Render()
     if (m_isTextureLocked)
     {
         SDL_UnlockTexture(m_texture);
+#if ACTIVE_PARTICLES_DEBUG_VIEW
+        SDL_UnlockTexture(d_debugActiveTexture);
+#endif
         m_isTextureLocked = false;
     }
 
     SDL_RenderCopy(m_renderer, m_texture , nullptr, nullptr);
+    
+#if ACTIVE_PARTICLES_DEBUG_VIEW
+    SDL_RenderCopy(m_renderer, d_debugActiveTexture, nullptr, nullptr);
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -57,14 +75,14 @@ void Field::Update()
 {
     for (auto& particle : m_particles)
     {
-        if (!particle.isActive) continue;
+        // if (!particle.isActive) continue;
         UpdateParticle(particle);
     }
 }
 
 void Field::UpdateParticle(Particle& particle)
 {
-    Uint8 actions = GetActionsByType(particle.type);
+    const Uint8 actions = GetActionsByType(particle.type);
     if (!HasAction(actions, ParticleAction::IMMOVABLE))
     {
         if (HasAction(actions, ParticleAction::MOVE_HORIZONTAL))
@@ -73,10 +91,10 @@ void Field::UpdateParticle(Particle& particle)
                 AddHorizontalVelocity(particle);
         }
         if (HasAction(actions, ParticleAction::MOVE_VERTICAL))
-                                                                  {
-                                                                  if (!particle.isGrounded)
-                                                                  AddVerticalVelocity(particle);
-                                                                  }
+        {
+            if (!particle.isGrounded)
+            AddVerticalVelocity(particle);
+        }
         MoveParticle(particle);
     }
     else
@@ -88,26 +106,37 @@ void Field::UpdateParticle(Particle& particle)
 
 void Field::AddVerticalVelocity(Particle& particle)
 {
-    const float velocityAdded = ParticleDefinitions::GetMassByType(particle.type)
-                        *  Config::GRAVITY * TheGame::Instance().GetDeltaTime();
+    const float velocityAdded = GetMassByType(particle.type)
+                        *  Config::G_GRAVITY * TheGame::Instance().GetDeltaTime();
     particle.velocity.y += velocityAdded;
 }
 
-void Field::AddHorizontalVelocity(Particle& particle)
+void Field::AddHorizontalVelocity(Particle& particle) const
 {
-    const float velocityAdded = ParticleDefinitions::GetMassByType(particle.type)
-                            *  Config::SIDE_SPEED * TheGame::Instance().GetDeltaTime() / 2;
+    float velocityAdded = 0;
+    if (particle.velocity.x >= 0 &&
+        m_particlesGrid[Ind(particle.position + IVec2(1, 0))] == nullptr)
+    {
+        velocityAdded = GetMassByType(particle.type)
+                        *  Config::G_SIDE_SPEED * TheGame::Instance().GetDeltaTime() / 2;
+    }
+    else if (particle.velocity.x <= 0 &&
+             m_particlesGrid[Ind(particle.position + IVec2(-1, 0))] == nullptr)
+    {
+         velocityAdded = -(GetMassByType(particle.type)
+                         *  Config::G_SIDE_SPEED * TheGame::Instance().GetDeltaTime() / 2);
+    }
     particle.velocity.x += velocityAdded;
 }
 
 void Field::MoveParticle(Particle& particle)
 {
     IVec2 beginningPos = particle.position;
-    int vX = (int)particle.velocity.x;
-    int vY = (int)particle.velocity.y;
+    const int vX = static_cast<int>(particle.velocity.x);
+    const int vY = static_cast<int>(particle.velocity.y);
 
     IVec2 start = particle.position;
-    IVec2 end = start + IVec2(vX, vY);
+    const IVec2 end = start + IVec2(vX, vY);
     int dx = std::abs(end.x - start.x);
     int dy = -std::abs(end.y - start.y);
 
@@ -136,6 +165,26 @@ void Field::MoveParticle(Particle& particle)
             {
                 const int ind = Ind(particle.position);
                 const int indOther = Ind(particle.position + change);
+                SwapParticles(ind, indOther);
+                start.x += change.x;
+                start.y += change.y;
+                change.x = 0;
+                change.y = 0;
+            }
+            else if (change.y != 0 && dx >= 0  && CanSwapParticles(particle, change + IVec2(1, 0)))
+            {
+                const int ind = Ind(particle.position);
+                const int indOther = Ind(particle.position + change + IVec2(1, 0));
+                SwapParticles(ind, indOther);
+                start.x += change.x;
+                start.y += change.y;
+                change.x = 0;
+                change.y = 0;
+            }
+            else if (change.y != 0 && dx <= 0 &&CanSwapParticles(particle, change + IVec2(-1, 0)))
+            {
+                const int ind = Ind(particle.position);
+                const int indOther = Ind(particle.position + change + IVec2(-1, 0));
                 SwapParticles(ind, indOther);
                 start.x += change.x;
                 start.y += change.y;

@@ -5,9 +5,11 @@
 #include "IVec2.h"
 #include "SDL_render.h"
 
+#define ACTIVE_PARTICLES_DEBUG_VIEW false
+
+
 enum class ParticleType;
 struct Particle;
-
 
 class Field
 {
@@ -25,7 +27,8 @@ class Field
     int m_pitch;
 
     std::vector<Particle> m_particles;
-    
+
+   
 public:
     Field();
     ~Field();
@@ -50,13 +53,22 @@ private:
     void UpdateParticle(Particle& particle);
 
     static void AddVerticalVelocity(Particle& particle);
-    static void AddHorizontalVelocity(Particle& particle);
+    void AddHorizontalVelocity(Particle& particle) const;
 
     void MoveParticle(Particle& particle);
     
     void SwapParticles(int ind, int indOther);
 
     bool CanSwapParticles(const Particle& particle, const IVec2& direction) const;
+
+
+private:
+    #if ACTIVE_PARTICLES_DEBUG_VIEW
+        // ReSharper disable once CppInconsistentNaming
+        SDL_Texture* d_debugActiveTexture;
+        // ReSharper disable once CppInconsistentNaming
+        Uint32* d_debugRawTexturePointer;
+    #endif
 };
 
 // todo this is plan how to organize particles 

@@ -2,6 +2,6 @@
 
 namespace Config
 {
-    constexpr int GRAVITY = 6; // not int??? make velocity not int 
-    constexpr int SIDE_SPEED = 3;
+    constexpr float G_GRAVITY = 6; 
+    constexpr float G_SIDE_SPEED = 3;
 }

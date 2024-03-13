@@ -7,19 +7,19 @@ class Field;
 class TheGame
 {
 public:
-    static const int WIDTH = 200;
-    static const int HEIGHT = 150;
+    static constexpr int WIDTH = 200;
+    static constexpr int HEIGHT = 150;
 
-    static const int WINDOW_WIDTH = 800;
-    static const int WINDOW_HEIGHT = 600;
+    static constexpr int WINDOW_WIDTH = 800;
+    static constexpr int WINDOW_HEIGHT = 600;
     
 private:
-    bool isRunning;
-    SDL_Renderer* m_renderer;
+    bool m_isRunning = false;
+    SDL_Renderer* m_renderer = nullptr;
 
-    Field* m_filed;
+    Field* m_filed = nullptr;
 
-    float m_deltaTime;
+    float m_deltaTime = 0;
 
     IVec2 m_mousePos;
     bool m_wasClicked = false;
@@ -37,8 +37,8 @@ private:
 
     void HandleEvents();
     void OnMouseClick();
-    void Update();
-    void Render();
+    void Update() const;
+    void Render() const;
 
-    void CleanUp();
+    void CleanUp() const;
 };

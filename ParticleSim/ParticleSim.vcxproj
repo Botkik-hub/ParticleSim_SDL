@@ -269,9 +269,6 @@
     <ClInclude Include="src\TheGame.h" />
     <ClInclude Include="src\Vec2.h" />
   </ItemGroup>
-  <ItemGroup>
-    <Content Include="src\DiscardedCode" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

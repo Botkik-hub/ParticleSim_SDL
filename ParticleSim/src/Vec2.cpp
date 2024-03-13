@@ -47,6 +47,6 @@ Vec2::operator IVec2() const
 Vec2::Vec2()
 = default;
 
-Vec2::Vec2(float x, float y): x(x), y(y)
+Vec2::Vec2(const float x, const float y): x(x), y(y)
 {
 }

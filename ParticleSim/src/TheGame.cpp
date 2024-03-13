@@ -29,15 +29,14 @@ void TheGame::Run()
     SDL_Window* win;
 
     SDL_CreateWindowAndRenderer( WINDOW_WIDTH, WINDOW_HEIGHT, 0, &win, &m_renderer);
-
 	
     m_deltaTime = 0.16f;
 
     Init();
 
-    isRunning = true;
+    m_isRunning = true;
     
-    while (isRunning)
+    while (m_isRunning)
     {
         const Uint32 frameStart = SDL_GetTicks();
 
@@ -65,7 +64,6 @@ float TheGame::GetDeltaTime() const
 void TheGame::Init()
 {
     m_filed = new Field;
-
     
     for (int x = 70; x < 100; ++x)
     {
@@ -100,8 +98,8 @@ void TheGame::Init()
 
 void TheGame::SpawnParticlesInLine(IVec2 start, IVec2 end) const
 {
-    int dx = std::abs(end.x - start.x);
-    int dy = -std::abs(end.y - start.y);
+    const int dx = std::abs(end.x - start.x);
+    const int dy = -std::abs(end.y - start.y);
 
     IVec2 s;
     if (start.x < end.x)
@@ -151,11 +149,13 @@ void TheGame::HandleEvents()
             OnMouseClick();
             break;
         case SDL_QUIT:
-            isRunning = false;
+            m_isRunning = false;
             break;
         case SDL_KEYDOWN:
             if (event.key.keysym.sym == SDLK_ESCAPE)
-                isRunning = false;
+                m_isRunning = false;
+            break;
+        default:
             break;
         }
     }
@@ -180,7 +180,7 @@ void TheGame::OnMouseClick()
     }
 }
 
-void TheGame::Update()
+void TheGame::Update() const
 {
     static int count = 0;
     if (count < 300)
@@ -192,7 +192,7 @@ void TheGame::Update()
     std::cout << "Delta time: " << m_deltaTime << '\n';
 }
 
-void TheGame::Render()
+void TheGame::Render() const
 {
     SDL_RenderClear(m_renderer);
     
@@ -201,7 +201,7 @@ void TheGame::Render()
     SDL_RenderPresent(m_renderer);
 }
 
-void TheGame::CleanUp()
+void TheGame::CleanUp() const
 {
     delete m_filed;
 }

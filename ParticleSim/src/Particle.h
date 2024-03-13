@@ -33,10 +33,6 @@ struct Particle
     Vec2 velocity;
     bool isActive = true;
     bool isGrounded;
-    union
-    {
-        // not used for now can have properties of other stuff
-    };
 };
 
 namespace ParticleDefinitions
