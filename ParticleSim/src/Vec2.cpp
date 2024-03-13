@@ -44,6 +44,11 @@ Vec2::operator IVec2() const
     return {static_cast<int>(x), static_cast<int>(y)};
 }
 
+float Vec2::SquareMagnitude() const
+{
+    return x*x + y+y;
+}
+
 Vec2::Vec2()
 = default;
 

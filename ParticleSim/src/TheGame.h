@@ -10,8 +10,8 @@ public:
     static constexpr int WIDTH = 200;
     static constexpr int HEIGHT = 150;
 
-    static constexpr int WINDOW_WIDTH = 800;
-    static constexpr int WINDOW_HEIGHT = 600;
+    static constexpr int WINDOW_WIDTH = 1600;
+    static constexpr int WINDOW_HEIGHT = 1200;
     
 private:
     bool m_isRunning = false;

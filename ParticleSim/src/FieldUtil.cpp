@@ -54,6 +54,11 @@ void Field::SpawnParticle(int x, int y, const ParticleType type)
     UpdateTexture(index, ParticleDefinitions::GetColorByType(type));
 }
 
+Particle* Field::GetParticleAtPosition(const IVec2 position) const
+{
+    return m_particlesGrid[Ind(position)];
+}
+
 void Field::SwapParticles(const int ind, const int indOther)
 {
     Particle* one = m_particlesGrid[ind];

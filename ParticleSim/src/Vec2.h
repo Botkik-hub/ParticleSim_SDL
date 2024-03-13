@@ -15,6 +15,7 @@ struct Vec2
    bool operator==(const Vec2& other) const;
 
    explicit operator IVec2() const;
+   float SquareMagnitude() const;
 
    Vec2();
    Vec2(float x, float y);

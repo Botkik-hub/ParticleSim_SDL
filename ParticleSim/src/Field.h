@@ -5,7 +5,7 @@
 #include "IVec2.h"
 #include "SDL_render.h"
 
-#define ACTIVE_PARTICLES_DEBUG_VIEW true 
+#define ACTIVE_PARTICLES_DEBUG_VIEW false;
 
 
 enum class ParticleType;
@@ -45,6 +45,8 @@ public:
     void UpdateTexture(int ind, Uint32 color);
 
     void SpawnParticle(int x, int y, ParticleType type);
+
+    Particle* GetParticleAtPosition(IVec2 position) const;
     
 private:
     static Uint32 ColToUint(SDL_Color color);

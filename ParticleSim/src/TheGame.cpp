@@ -49,7 +49,7 @@ void TheGame::Run()
         if (m_deltaTime  < 0.016)
         {
             const Uint32 time = 16 - (frameEnd - frameStart);
-//            SDL_Delay(time);
+            SDL_Delay(time);
             m_deltaTime = 0.016f;
         }
     }
@@ -168,16 +168,26 @@ void TheGame::OnMouseClick()
     SDL_GetMouseState(&x, &y);
     x = x * WIDTH / WINDOW_WIDTH;
     y = y * HEIGHT / WINDOW_HEIGHT;
-    if (m_wasClicked)
+    // if (m_wasClicked)
+    // {
+    //     SpawnParticlesInLine({x , y}, m_mousePos);
+    //     m_wasClicked = false;
+    // }
+    // else
+    // {
+    //     m_mousePos = {x, y};
+    //     m_wasClicked = true;
+    // }
+    Particle* particle = m_filed->GetParticleAtPosition({x, y});
+    if (particle == nullptr)
     {
-        SpawnParticlesInLine({x , y}, m_mousePos);
-        m_wasClicked = false;
-    }
-    else
+        std::cout << "NULL" << '\n';
+    }else
     {
-        m_mousePos = {x, y};
-        m_wasClicked = true;
+        std::cout << "Type " << (int)particle->type << " Position : " << particle->position.x << ", " << particle->position.y
+        << " Velocity : " << particle->velocity.x << ", " << particle->velocity.y << "\n";
     }
+    std::cout.flush();
 }
 
 void TheGame::Update() const
@@ -189,7 +199,6 @@ void TheGame::Update() const
         count++;
     }
     m_filed->Update();
-    std::cout << "Delta time: " << m_deltaTime << '\n';
 }
 
 void TheGame::Render() const
