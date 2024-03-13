@@ -56,6 +56,11 @@ void Field::SpawnParticle(int x, int y, const ParticleType type)
 
 void Field::SwapParticles(const int ind, const int indOther)
 {
+    Particle* one = m_particlesGrid[ind];
+    Particle* two = m_particlesGrid[indOther];
+
+    if (one == nullptr && two == nullptr ) return;
+    
     Particle* temp = m_particlesGrid[ind];
     m_particlesGrid[ind] = m_particlesGrid[indOther];
     m_particlesGrid[indOther] = temp;

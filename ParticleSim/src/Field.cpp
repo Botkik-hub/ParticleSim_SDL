@@ -132,13 +132,13 @@ void Field::AddHorizontalVelocity(Particle& particle) const
         m_particlesGrid[Ind(particle.position + IVec2(1, 0))] == nullptr)
     {
         velocityAdded = GetMassByType(particle.type)
-                        *  Config::G_SIDE_SPEED * TheGame::Instance().GetDeltaTime() / 2;
+                        *  Config::G_SIDE_SPEED * TheGame::Instance().GetDeltaTime() ;
     }
     else if (particle.velocity.x < m_width - 1 &&
              m_particlesGrid[Ind(particle.position + IVec2(-1, 0))] == nullptr)
     {
          velocityAdded = -(GetMassByType(particle.type)
-                         *  Config::G_SIDE_SPEED * TheGame::Instance().GetDeltaTime() / 2);
+                         *  Config::G_SIDE_SPEED * TheGame::Instance().GetDeltaTime() );
     }
     particle.velocity.x += velocityAdded;
 }
@@ -247,6 +247,8 @@ void Field::MoveParticle(Particle& particle)
     }
     if (particle.velocity == Vec2(0, 0))
         particle.isActive = false;
+    else
+        particle.velocity = particle.velocity * 0.99;
 }
 
 bool Field::CanSwapParticles(const Particle& particle, const IVec2& direction) const
@@ -281,7 +283,7 @@ bool Field::CanSwapParticles(const Particle& particle, const IVec2& direction) c
     {
         if (IsGas(otherActions))
         {
-            if (GetMassByType(particle.type) >= GetMassByType(otherParticle->type))
+            if (GetMassByType(particle.type) > GetMassByType(otherParticle->type))
             {
                 return true;
             }
@@ -303,7 +305,7 @@ bool Field::CanSwapParticles(const Particle& particle, const IVec2& direction) c
         }
         else if (IsLiquid(otherActions))
         {
-            if (GetMassByType(particle.type) >= GetMassByType(otherParticle->type))
+            if (GetMassByType(particle.type) > GetMassByType(otherParticle->type))
             {
                 return true;
             }

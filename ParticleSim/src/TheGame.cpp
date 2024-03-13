@@ -49,7 +49,7 @@ void TheGame::Run()
         if (m_deltaTime  < 0.016)
         {
             const Uint32 time = 16 - (frameEnd - frameStart);
-            SDL_Delay(time);
+//            SDL_Delay(time);
             m_deltaTime = 0.016f;
         }
     }
