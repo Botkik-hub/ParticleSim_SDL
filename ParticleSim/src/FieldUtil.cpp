@@ -36,30 +36,8 @@ void Field::UpdateTexture(const int ind, const Uint32 color)
     {
         SDL_LockTexture(m_texture, nullptr, reinterpret_cast<void**>(&m_RawTexturePtr), &m_pitch);
         m_isTextureLocked = true;
-        
-#if ACTIVE_PARTICLES_DEBUG_VIEW
-        SDL_LockTexture(d_debugActiveTexture, nullptr, reinterpret_cast<void**>(&d_debugRawTexturePointer), &m_pitch);
-#endif
     }
     m_RawTexturePtr[ind] = color;
-    
-#if ACTIVE_PARTICLES_DEBUG_VIEW
-    if (m_particlesGrid[ind] == nullptr)
-    {
-        d_debugRawTexturePointer[ind] = 0;
-    }
-    else
-    {
-        if (m_particlesGrid[ind]->isActive)
-        {
-            d_debugRawTexturePointer[ind] = 0 << 24 | 255 << 16 | 0 << 8 | 255;
-        }
-        else
-        {
-            d_debugRawTexturePointer[ind] = 255 << 24 | 0 << 16 | 0 << 8 | 255;
-        }
-    }
-#endif
 }
 
 void Field::SpawnParticle(int x, int y, const ParticleType type)

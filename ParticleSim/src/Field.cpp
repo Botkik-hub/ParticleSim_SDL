@@ -38,7 +38,7 @@ Field::Field(): m_RawTexturePtr(nullptr)
 #if ACTIVE_PARTICLES_DEBUG_VIEW
     d_debugActiveTexture = SDL_CreateTexture(m_renderer, SDL_PIXELFORMAT_RGBA8888,
         SDL_TEXTUREACCESS_STREAMING, m_width, m_height);
-    SDL_SetTextureAlphaMod(d_debugActiveTexture, 128);
+    SDL_SetTextureAlphaMod(d_debugActiveTexture, 255);
     SDL_SetTextureBlendMode(d_debugActiveTexture, SDL_BLENDMODE_BLEND);
 #endif
 }
@@ -57,17 +57,31 @@ void Field::Render()
     if (m_isTextureLocked)
     {
         SDL_UnlockTexture(m_texture);
-#if ACTIVE_PARTICLES_DEBUG_VIEW
-        SDL_UnlockTexture(d_debugActiveTexture);
-#endif
         m_isTextureLocked = false;
     }
 
     SDL_RenderCopy(m_renderer, m_texture , nullptr, nullptr);
     
 #if ACTIVE_PARTICLES_DEBUG_VIEW
+    SDL_LockTexture(d_debugActiveTexture, nullptr, reinterpret_cast<void**>(&d_debugRawTexturePointer), &m_pitch);
+    memset(d_debugRawTexturePointer, 0, m_size * sizeof(Uint32));
+    for (auto& p : m_particles)
+    {
+         const int ind = Ind(p.position);
+         if (p.isActive)
+         {
+             d_debugRawTexturePointer[ind] = 0 << 24 | 255 << 16 | 0 << 8 | 255;
+         }
+         else
+         {
+             d_debugRawTexturePointer[ind] = 255 << 24 | 0 << 16 | 0 << 8 | 255;
+         }
+    }
+    SDL_UnlockTexture(d_debugActiveTexture);
+     
     SDL_RenderCopy(m_renderer, d_debugActiveTexture, nullptr, nullptr);
 #endif
+        
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -93,7 +107,7 @@ void Field::UpdateParticle(Particle& particle)
         if (HasAction(actions, ParticleAction::MOVE_VERTICAL))
         {
             if (!particle.isGrounded)
-            AddVerticalVelocity(particle);
+                AddVerticalVelocity(particle);
         }
         MoveParticle(particle);
     }
@@ -114,13 +128,13 @@ void Field::AddVerticalVelocity(Particle& particle)
 void Field::AddHorizontalVelocity(Particle& particle) const
 {
     float velocityAdded = 0;
-    if (particle.velocity.x >= 0 &&
+    if (particle.velocity.x > 0 &&
         m_particlesGrid[Ind(particle.position + IVec2(1, 0))] == nullptr)
     {
         velocityAdded = GetMassByType(particle.type)
                         *  Config::G_SIDE_SPEED * TheGame::Instance().GetDeltaTime() / 2;
     }
-    else if (particle.velocity.x <= 0 &&
+    else if (particle.velocity.x < m_width - 1 &&
              m_particlesGrid[Ind(particle.position + IVec2(-1, 0))] == nullptr)
     {
          velocityAdded = -(GetMassByType(particle.type)
@@ -176,7 +190,7 @@ void Field::MoveParticle(Particle& particle)
                 const int ind = Ind(particle.position);
                 const int indOther = Ind(particle.position + change + IVec2(1, 0));
                 SwapParticles(ind, indOther);
-                start.x += change.x;
+                start.x += change.x + 1;
                 start.y += change.y;
                 change.x = 0;
                 change.y = 0;
@@ -186,7 +200,7 @@ void Field::MoveParticle(Particle& particle)
                 const int ind = Ind(particle.position);
                 const int indOther = Ind(particle.position + change + IVec2(-1, 0));
                 SwapParticles(ind, indOther);
-                start.x += change.x;
+                start.x += change.x - 1;
                 start.y += change.y;
                 change.x = 0;
                 change.y = 0;

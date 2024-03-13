@@ -5,7 +5,7 @@
 #include "IVec2.h"
 #include "SDL_render.h"
 
-#define ACTIVE_PARTICLES_DEBUG_VIEW false
+#define ACTIVE_PARTICLES_DEBUG_VIEW true
 
 
 enum class ParticleType;
