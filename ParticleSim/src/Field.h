@@ -5,7 +5,7 @@
 #include "IVec2.h"
 #include "SDL_render.h"
 
-#define ACTIVE_PARTICLES_DEBUG_VIEW false;
+#define ACTIVE_PARTICLES_DEBUG_VIEW false
 
 
 enum class ParticleType;
@@ -63,7 +63,11 @@ private:
 
     bool CanSwapParticles(const Particle& particle, const IVec2& direction) const;
 
+    bool CanGoDown(const Particle& particle) const;
 
+    bool CanGoRight(const Particle& particle) const;
+    bool CanGoLeft(const Particle& particle) const;
+    static bool CanSwapParticles(const ParticleType type, const ParticleType otherType);
 private:
     #if ACTIVE_PARTICLES_DEBUG_VIEW
         // ReSharper disable once CppInconsistentNaming

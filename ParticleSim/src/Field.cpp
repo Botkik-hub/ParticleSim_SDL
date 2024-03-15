@@ -67,15 +67,19 @@ void Field::Render()
     memset(d_debugRawTexturePointer, 0, m_size * sizeof(Uint32));
     for (auto& p : m_particles)
     {
-         const int ind = Ind(p.position);
-         if (p.isActive)
-         {
-             d_debugRawTexturePointer[ind] = 0 << 24 | 255 << 16 | 0 << 8 | 255;
-         }
-         else
-         {
-             d_debugRawTexturePointer[ind] = 255 << 24 | 0 << 16 | 0 << 8 | 255;
-         }
+        const int ind = Ind(p.position);
+        if (p.velocity.x == 0)
+        {
+            d_debugRawTexturePointer[ind] = 255  << 24 | 255 << 16 | 255  << 8 | 255;
+        }
+        else if (p.velocity.x > 0)
+        {
+            d_debugRawTexturePointer[ind] = 0 << 24 | 255 << 16 | 0 << 8 | 255;
+        }
+        else
+        {
+            d_debugRawTexturePointer[ind] = 255 << 24 | 0 << 16 | 0 << 8 | 255;
+        }
     }
     SDL_UnlockTexture(d_debugActiveTexture);
      
@@ -84,7 +88,6 @@ void Field::Render()
         
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void Field::Update()
 {
     for (auto& particle : m_particles)
@@ -99,16 +102,18 @@ void Field::UpdateParticle(Particle& particle)
     const Uint8 actions = GetActionsByType(particle.type);
     if (!HasAction(actions, ParticleAction::IMMOVABLE))
     {
+        bool canGoDown = CanGoDown(particle);
         if (HasAction(actions, ParticleAction::MOVE_HORIZONTAL))
         {
-            if (particle.isGrounded)
+            if (!canGoDown)
                 AddHorizontalVelocity(particle);
         }
         if (HasAction(actions, ParticleAction::MOVE_VERTICAL))
         {
-            if (!particle.isGrounded)
+            if (canGoDown)
                 AddVerticalVelocity(particle);
         }
+        
         MoveParticle(particle);
     }
     else
@@ -128,45 +133,47 @@ void Field::AddVerticalVelocity(Particle& particle)
 void Field::AddHorizontalVelocity(Particle& particle) const
 {
     float velocityAdded = 0;
-    if (particle.velocity.x >= 0 && particle.position.x < m_width - 1 &&
-        m_particlesGrid[Ind(particle.position + IVec2(1, 0))] == nullptr)
+    if (particle.position == IVec2(107, 10))
     {
-        velocityAdded = GetMassByType(particle.type)
-                        *  Config::G_SIDE_SPEED * TheGame::Instance().GetDeltaTime() ;
+        bool test = false;
     }
-    else if (particle.velocity.x <= 0  && particle.position.x > 0 &&
-             m_particlesGrid[Ind(particle.position + IVec2(-1, 0))] == nullptr)
+    if (particle.velocity.x >= 0)
     {
-         velocityAdded = -(GetMassByType(particle.type)
+        if (CanGoRight(particle))
+            velocityAdded = std::abs(GetMassByType(particle.type))
+                        *  Config::G_SIDE_SPEED * TheGame::Instance().GetDeltaTime() ;
+        else
+            particle.velocity.x = 0;
+    }
+    if (particle.velocity.x <= 0)
+    {
+        if (CanGoLeft(particle))
+             velocityAdded = -(std::abs(GetMassByType(particle.type))
                          *  Config::G_SIDE_SPEED * TheGame::Instance().GetDeltaTime() );
+        else
+            particle.velocity.x = 0;
     }
     particle.velocity.x += velocityAdded;
 }
 
 void Field::MoveParticle(Particle& particle)
 {
-    IVec2 beginningPos = particle.position;
     const int vX = static_cast<int>(particle.velocity.x);
     const int vY = static_cast<int>(particle.velocity.y);
 
+    if (vX == 0 && vY == 0) return;
+    
     IVec2 start = particle.position;
     const IVec2 end = start + IVec2(vX, vY);
+    
     int dx = std::abs(end.x - start.x);
     int dy = -std::abs(end.y - start.y);
 
     IVec2 s;
-    if (start.x < end.x)
-        s.x = 1;
-    else
-        s.x = -1;
-
-    if (start.y < end.y)
-        s.y = 1;
-    else
-        s.y = -1;
+    s.x = start.x < end.x ? 1 : -1;
+    s.y = start.y < end.y ? 1 : -1;
 
     int error = dx + dy;
-
     IVec2 change = {0, 0};
     
     while (true)
@@ -245,10 +252,15 @@ void Field::MoveParticle(Particle& particle)
             // start.y = start.y + s.y;
         }
     }
+        
     if (particle.velocity.SquareMagnitude() < 0.000001)
+    {
         particle.isActive = false;
+        // particle.velocity.x = 0;
+        // particle.velocity.y = 0;
+    }
     else
-        particle.velocity = particle.velocity * 0.99;
+        particle.velocity = particle.velocity * Config::G_DAMPING;
 }
 
 bool Field::CanSwapParticles(const Particle& particle, const IVec2& direction) const
@@ -271,6 +283,7 @@ bool Field::CanSwapParticles(const Particle& particle, const IVec2& direction) c
         return true;
     }
 
+    return CanSwapParticles(particle.type, otherParticle->type);
     const Uint8 actions = GetActionsByType(particle.type);
     const Uint8 otherActions = GetActionsByType(otherParticle->type);
 
@@ -284,59 +297,130 @@ bool Field::CanSwapParticles(const Particle& particle, const IVec2& direction) c
         if (IsGas(otherActions))
         {
             if (GetMassByType(particle.type) > GetMassByType(otherParticle->type))
-            {
                 return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-        else
-        {
             return false;
         }
+        return false;
     }
-    else if (IsLiquid(actions))
+    if (IsLiquid(actions))
     {
         if (IsGas(otherActions))
         {
             return true;
         }
-        else if (IsLiquid(otherActions))
+        if (IsLiquid(otherActions))
         {
             if (GetMassByType(particle.type) > GetMassByType(otherParticle->type))
-            {
                 return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-        else // solid
-        {
             return false;
         }
+        return false;
     }
     else if (IsSolid(actions))
     {
-        if (particle.type == ParticleType::Sand && otherParticle->type == ParticleType::Water)
-        {
-            return true;
-        }
         if (IsSolid(otherActions))
+            return false;
+        return true;
+    }
+    
+    throw std::exception("Missing particle type in actions");
+}
+
+bool Field::CanGoDown(const Particle& particle) const
+{
+    // todo, not sure what to do if mass == 0
+    
+    const int offsetVertical = GetMassByType(particle.type) > 0 ? 1 : -1;
+
+    
+    // goes down
+    if (offsetVertical > 0 && particle.position.y >= m_height -1 ) return false;
+    if (offsetVertical < 0 && particle.position.y <= 0) return false;
+
+    const Particle* under = m_particlesGrid[Ind(particle.position + IVec2(0, offsetVertical))];
+    if (under == nullptr) return true;
+    if (CanSwapParticles(particle.type, under->type)) return true;
+
+    if (particle.position.x < m_width - 1)
+    {
+        const Particle* underRight = m_particlesGrid[Ind(particle.position + IVec2(1, offsetVertical))];
+        if (underRight == nullptr) return true;
+        if (CanSwapParticles(particle.type, underRight->type)) return true;
+    }
+    if (particle.position.x > 0)
+    {
+        const Particle* underLeft = m_particlesGrid[Ind(particle.position + IVec2(-1, offsetVertical))];
+        if (underLeft == nullptr) return true;
+        if (CanSwapParticles(particle.type, underLeft->type)) return true;
+    }
+    return false;
+}
+
+bool Field::CanGoRight(const Particle& particle) const
+{
+    if (particle.position.x >= m_width - 1) return false;
+
+    if (m_particlesGrid[Ind(particle.position + IVec2(1, 0))] == nullptr)
+    {
+        return true;
+    }
+    return false;
+}
+
+bool Field::CanGoLeft(const Particle& particle) const
+{
+    if (particle.position.x <= 0) return false;
+
+   
+    if (m_particlesGrid[Ind(particle.position + IVec2(-1, 0))] == nullptr)
+    {
+        return true;
+    }
+    return false;
+}
+
+bool Field::CanSwapParticles(const ParticleType type, const ParticleType otherType)
+{
+    const Uint8 actions = GetActionsByType(type);
+    const Uint8 otherActions = GetActionsByType(otherType);
+    
+    if (HasAction(otherActions, ParticleAction::IMMOVABLE))
+    {
+        return false;
+    }
+     
+    if (IsGas(actions))
+    {
+        if (IsGas(otherActions))
         {
+            if (GetMassByType(type) > GetMassByType(otherType))
+            {
+                return true;
+            }
             return false;
         }
-        else
+        return false;
+    }
+    if (IsLiquid(actions))
+    {
+        if (IsGas(otherActions))
         {
             return true;
         }
+        if (IsLiquid(otherActions))
+        {
+            if (GetMassByType(type) > GetMassByType(otherType))
+                return true;
+            return false;
+        }
+        return false;
     }
-    else
+    if (IsSolid(actions))
     {
-        throw std::exception("Missing particle type in actions");
+        if (IsSolid(otherActions))
+            return false;
+        return true;
     }
+    throw std::exception("Missing particle type in actions");
 }
 

@@ -61,8 +61,8 @@ Particle* Field::GetParticleAtPosition(const IVec2 position) const
 
 void Field::SwapParticles(const int ind, const int indOther)
 {
-    Particle* one = m_particlesGrid[ind];
-    Particle* two = m_particlesGrid[indOther];
+    const Particle* one = m_particlesGrid[ind];
+    const Particle* two = m_particlesGrid[indOther];
 
     if (one == nullptr && two == nullptr ) return;
     
