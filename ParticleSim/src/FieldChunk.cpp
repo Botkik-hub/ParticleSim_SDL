@@ -1,4 +1,4 @@
-﻿#include "Field.h"
+﻿#include "FieldChunk.h"
 
 #include <iostream>
 
@@ -10,11 +10,16 @@
 
 using namespace ParticleDefinitions;
 
-Field::Field(): m_RawTexturePtr(nullptr)
+FieldChunk::FieldChunk(const IVec2 position, const IVec2 size, const IVec2 dstSize): m_RawTexturePtr(nullptr)
 {
-    m_width = TheGame::WIDTH;
-    m_height = TheGame::HEIGHT;
+    m_position = position;
+    m_width = size.x;
+    m_height = size.y;
     m_size = m_height * m_width;
+    m_dst.x = position.x;
+    m_dst.y = position.y;
+    m_dst.w = dstSize.x;
+    m_dst.h = dstSize.y;
     m_renderer = TheGame::Instance().GetRenderer();
 
     Uint32* textureColors = new Uint32[m_size];
@@ -43,7 +48,7 @@ Field::Field(): m_RawTexturePtr(nullptr)
 #endif
 }
 
-Field::~Field()
+FieldChunk::~FieldChunk()
 {
     delete[] m_particlesGrid;
     SDL_DestroyTexture(m_texture);
@@ -52,15 +57,15 @@ Field::~Field()
 #endif
 }
 
-void Field::Render()
+void FieldChunk::Render()
 {
     if (m_isTextureLocked)
     {
         SDL_UnlockTexture(m_texture);
         m_isTextureLocked = false;
     }
-
-    SDL_RenderCopy(m_renderer, m_texture , nullptr, nullptr);
+    
+    SDL_RenderCopy(m_renderer, m_texture , nullptr, &m_dst);
     
 #if ACTIVE_PARTICLES_DEBUG_VIEW
     SDL_LockTexture(d_debugActiveTexture, nullptr, reinterpret_cast<void**>(&d_debugRawTexturePointer), &m_pitch);
@@ -68,14 +73,14 @@ void Field::Render()
     for (auto& p : m_particles)
     {
         const int ind = Ind(p.position);
-        if (p.velocity.x == 0)
+        if (p.isActive) //velocity.x == 0)
         {
             d_debugRawTexturePointer[ind] = 255  << 24 | 255 << 16 | 255  << 8 | 255;
         }
-        else if (p.velocity.x > 0)
-        {
-            d_debugRawTexturePointer[ind] = 0 << 24 | 255 << 16 | 0 << 8 | 255;
-        }
+        // else if (p.velocity.x > 0)
+        // {
+        //     d_debugRawTexturePointer[ind] = 0 << 24 | 255 << 16 | 0 << 8 | 255;
+        // }
         else
         {
             d_debugRawTexturePointer[ind] = 255 << 24 | 0 << 16 | 0 << 8 | 255;
@@ -85,19 +90,18 @@ void Field::Render()
      
     SDL_RenderCopy(m_renderer, d_debugActiveTexture, nullptr, nullptr);
 #endif
-        
 }
 
-void Field::Update()
+void FieldChunk::Update()
 {
     for (auto& particle : m_particles)
     {
-        // if (!particle.isActive) continue;
+        if (!particle.isActive) continue;
         UpdateParticle(particle);
     }
 }
 
-void Field::UpdateParticle(Particle& particle)
+void FieldChunk::UpdateParticle(Particle& particle)
 {
     const Uint8 actions = GetActionsByType(particle.type);
     if (!HasAction(actions, ParticleAction::IMMOVABLE))
@@ -123,14 +127,14 @@ void Field::UpdateParticle(Particle& particle)
     }
 }
 
-void Field::AddVerticalVelocity(Particle& particle)
+void FieldChunk::AddVerticalVelocity(Particle& particle)
 {
     const float velocityAdded = GetMassByType(particle.type)
                         *  Config::G_GRAVITY * TheGame::Instance().GetDeltaTime();
     particle.velocity.y += velocityAdded;
 }
 
-void Field::AddHorizontalVelocity(Particle& particle) const
+void FieldChunk::AddHorizontalVelocity(Particle& particle) const
 {
     float velocityAdded = 0;
     if (particle.position == IVec2(107, 10))
@@ -156,7 +160,7 @@ void Field::AddHorizontalVelocity(Particle& particle) const
     particle.velocity.x += velocityAdded;
 }
 
-void Field::MoveParticle(Particle& particle)
+void FieldChunk::MoveParticle(Particle& particle)
 {
     const int vX = static_cast<int>(particle.velocity.x);
     const int vY = static_cast<int>(particle.velocity.y);
@@ -263,7 +267,7 @@ void Field::MoveParticle(Particle& particle)
         particle.velocity = particle.velocity * Config::G_DAMPING;
 }
 
-bool Field::CanSwapParticles(const Particle& particle, const IVec2& direction) const
+bool FieldChunk::CanSwapParticles(const Particle& particle, const IVec2& direction) const
 {
     // check in bounds
     const IVec2 pos2 = particle.position + direction;
@@ -326,7 +330,7 @@ bool Field::CanSwapParticles(const Particle& particle, const IVec2& direction) c
     throw std::exception("Missing particle type in actions");
 }
 
-bool Field::CanGoDown(const Particle& particle) const
+bool FieldChunk::CanGoDown(const Particle& particle) const
 {
     // todo, not sure what to do if mass == 0
     
@@ -356,7 +360,7 @@ bool Field::CanGoDown(const Particle& particle) const
     return false;
 }
 
-bool Field::CanGoRight(const Particle& particle) const
+bool FieldChunk::CanGoRight(const Particle& particle) const
 {
     if (particle.position.x >= m_width - 1) return false;
 
@@ -367,7 +371,7 @@ bool Field::CanGoRight(const Particle& particle) const
     return false;
 }
 
-bool Field::CanGoLeft(const Particle& particle) const
+bool FieldChunk::CanGoLeft(const Particle& particle) const
 {
     if (particle.position.x <= 0) return false;
 
@@ -379,7 +383,7 @@ bool Field::CanGoLeft(const Particle& particle) const
     return false;
 }
 
-bool Field::CanSwapParticles(const ParticleType type, const ParticleType otherType)
+bool FieldChunk::CanSwapParticles(const ParticleType type, const ParticleType otherType)
 {
     const Uint8 actions = GetActionsByType(type);
     const Uint8 otherActions = GetActionsByType(otherType);

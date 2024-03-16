@@ -85,3 +85,9 @@ bool ParticleDefinitions::IsSolid(const Uint8 actions)
 {
     return (actions & ParticleAction::TYPE_MASK) == ParticleAction::IS_SOLID;
 }
+
+bool Particle::operator==(const Particle& other) const
+{
+    return type == other.type && position == other.position && velocity == other.velocity && isActive == other.isActive
+    && isGrounded == other.isGrounded;
+}

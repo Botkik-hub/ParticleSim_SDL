@@ -1,36 +1,36 @@
-﻿#include "Field.h"
+﻿#include "FieldChunk.h"
 #include "Particle.h"
 
-int Field::Ind(const int x, const int y) const
+int FieldChunk::Ind(const int x, const int y) const
 {
     return x + y * m_width;
 }
 
-int Field::Ind(const IVec2& cord) const
+int FieldChunk::Ind(const IVec2& cord) const
 {
     return cord.x + cord.y * m_width;
 }
 
-void Field::Cord(const int i, int& x, int& y) const
+void FieldChunk::Cord(const int i, int& x, int& y) const
 {
     x = i % m_width;
     y = i / m_width;
 }
 
-IVec2 Field::Cord(const int index) const
+IVec2 FieldChunk::Cord(const int index) const
 {
     return {
     index % m_width,
       index / m_width};  
 }
 
-Uint32 Field::ColToUint(const SDL_Color color)
+Uint32 FieldChunk::ColToUint(const SDL_Color color)
 {
     return (color.r << 24) | (color.g << 16) | (color.b << 8) | color.a;
 }
 
 
-void Field::UpdateTexture(const int ind, const Uint32 color)
+void FieldChunk::UpdateTexture(const int ind, const Uint32 color)
 {
     if (!m_isTextureLocked)
     {
@@ -40,7 +40,7 @@ void Field::UpdateTexture(const int ind, const Uint32 color)
     m_RawTexturePtr[ind] = color;
 }
 
-void Field::SpawnParticle(int x, int y, const ParticleType type)
+void FieldChunk::SpawnParticle(int x, int y, const ParticleType type)
 {
     m_particles.emplace_back();
     Particle& particle = m_particles.back();
@@ -54,12 +54,43 @@ void Field::SpawnParticle(int x, int y, const ParticleType type)
     UpdateTexture(index, ParticleDefinitions::GetColorByType(type));
 }
 
-Particle* Field::GetParticleAtPosition(const IVec2 position) const
+void FieldChunk::RemoveParticle(const Particle& particle)
+{
+    const auto it = std::find(m_particles.begin(), m_particles.end(), particle);
+    if (it == m_particles.end()) return;
+
+    const int index = std::distance(m_particles.begin(), it);
+    
+    m_particlesGrid[Ind(particle.position)] = nullptr;
+    if (m_particles.size() != 1)
+    {
+        m_particlesGrid[Ind(m_particles.back().position)] = nullptr;
+        m_particles[index] = m_particles.back();
+        Particle& particleOldBack = m_particles[index];
+        m_particlesGrid[Ind(particleOldBack.position)] = &particleOldBack;
+    }
+    m_particles.pop_back();
+}
+
+void FieldChunk::RemoveParticle(const int x, const int y)
+{
+    RemoveParticle(IVec2(x, y));
+}
+
+void FieldChunk::RemoveParticle(const IVec2 pos)
+{
+    const Particle* particle = m_particlesGrid[Ind(pos)];
+    if (particle == nullptr) return;
+
+    RemoveParticle(*particle);
+}
+
+Particle* FieldChunk::GetParticleAtPosition(const IVec2 position) const
 {
     return m_particlesGrid[Ind(position)];
 }
 
-void Field::SwapParticles(const int ind, const int indOther)
+void FieldChunk::SwapParticles(const int ind, const int indOther)
 {
     const Particle* one = m_particlesGrid[ind];
     const Particle* two = m_particlesGrid[indOther];

@@ -2,7 +2,7 @@
 #include "IVec2.h"
 #include "SDL_render.h"
 
-class Field;
+class FieldChunk;
 
 class TheGame
 {
@@ -17,7 +17,7 @@ private:
     bool m_isRunning = false;
     SDL_Renderer* m_renderer = nullptr;
 
-    Field* m_filed = nullptr;
+    FieldChunk* m_filed = nullptr;
 
     float m_deltaTime = 0;
 

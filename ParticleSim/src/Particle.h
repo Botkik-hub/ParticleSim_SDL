@@ -33,6 +33,8 @@ struct Particle
     Vec2 velocity;
     bool isActive = true;
     bool isGrounded;
+
+    bool operator==(const Particle& other) const;
 };
 
 namespace ParticleDefinitions

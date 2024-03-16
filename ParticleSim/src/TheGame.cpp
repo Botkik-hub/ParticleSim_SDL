@@ -6,7 +6,7 @@
 #include <SDL.h>
 #include <iostream>
 
-#include "Field.h"
+#include "FieldChunk.h"
 #include "Particle.h"
 
 TheGame& TheGame::Instance()
@@ -63,7 +63,7 @@ float TheGame::GetDeltaTime() const
 
 void TheGame::Init()
 {
-    m_filed = new Field;
+    m_filed = new FieldChunk(IVec2(0, 0), IVec2(WIDTH, HEIGHT), IVec2(WINDOW_WIDTH, WINDOW_HEIGHT));
     
     for (int x = 70; x < 100; ++x)
     {
@@ -178,15 +178,16 @@ void TheGame::OnMouseClick()
     //     m_mousePos = {x, y};
     //     m_wasClicked = true;
     // }
-    Particle* particle = m_filed->GetParticleAtPosition({x, y});
-    if (particle == nullptr)
-    {
-        std::cout << "NULL" << '\n';
-    }else
-    {
-        std::cout << "Type " << (int)particle->type << " Position : " << particle->position.x << ", " << particle->position.y
-        << " Velocity : " << particle->velocity.x << ", " << particle->velocity.y << "\n";
-    }
+    // Particle* particle = m_filed->GetParticleAtPosition({x, y});
+    // if (particle == nullptr)
+    // {
+    //     std::cout << "NULL" << '\n';
+    // }else
+    // {
+    //     std::cout << "Type " << (int)particle->type << " Position : " << particle->position.x << ", " << particle->position.y
+    //     << " Velocity : " << particle->velocity.x << ", " << particle->velocity.y << "\n";
+    // }
+    m_filed->RemoveParticle(x, y);
     std::cout.flush();
 }
 

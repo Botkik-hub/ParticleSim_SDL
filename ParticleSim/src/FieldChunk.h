@@ -5,13 +5,13 @@
 #include "IVec2.h"
 #include "SDL_render.h"
 
-#define ACTIVE_PARTICLES_DEBUG_VIEW false
+#define ACTIVE_PARTICLES_DEBUG_VIEW true
 
 
 enum class ParticleType;
 struct Particle;
 
-class Field
+class FieldChunk
 {
     int m_width;
     int m_height;
@@ -28,10 +28,12 @@ class Field
 
     std::vector<Particle> m_particles;
 
+    IVec2 m_position;
+    SDL_Rect m_dst; 
    
 public:
-    Field();
-    ~Field();
+    FieldChunk(IVec2 position, IVec2 size, IVec2 dstSize);
+    ~FieldChunk();
 
     void Update();
     void Render();
@@ -45,7 +47,10 @@ public:
     void UpdateTexture(int ind, Uint32 color);
 
     void SpawnParticle(int x, int y, ParticleType type);
-
+    void RemoveParticle(const Particle& particle);
+    void RemoveParticle(int x, int y);
+    void RemoveParticle(IVec2 pos);
+    
     Particle* GetParticleAtPosition(IVec2 position) const;
     
 private:
