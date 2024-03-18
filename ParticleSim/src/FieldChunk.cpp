@@ -96,7 +96,7 @@ void FieldChunk::Update()
 {
     for (auto& particle : m_particles)
     {
-        if (!particle.isActive) continue;
+        // if (!particle.isActive) continue;
         UpdateParticle(particle);
     }
 }
@@ -145,7 +145,7 @@ void FieldChunk::AddHorizontalVelocity(Particle& particle) const
     {
         if (CanGoRight(particle))
             velocityAdded = std::abs(GetMassByType(particle.type))
-                        *  Config::G_SIDE_SPEED * TheGame::Instance().GetDeltaTime() ;
+                        *  Config::G_SIDE_SPEED * TheGame::Instance().GetDeltaTime();
         else
             particle.velocity.x = 0;
     }
@@ -153,7 +153,7 @@ void FieldChunk::AddHorizontalVelocity(Particle& particle) const
     {
         if (CanGoLeft(particle))
              velocityAdded = -(std::abs(GetMassByType(particle.type))
-                         *  Config::G_SIDE_SPEED * TheGame::Instance().GetDeltaTime() );
+                         *  Config::G_SIDE_SPEED * TheGame::Instance().GetDeltaTime());
         else
             particle.velocity.x = 0;
     }

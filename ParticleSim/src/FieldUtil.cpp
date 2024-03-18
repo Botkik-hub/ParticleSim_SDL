@@ -52,6 +52,7 @@ void FieldChunk::SpawnParticle(int x, int y, const ParticleType type)
     const int index = Ind(x, y);
     m_particlesGrid[index] = &particle;
     UpdateTexture(index, ParticleDefinitions::GetColorByType(type));
+    ActivateParticlesAround({x, y});
 }
 
 void FieldChunk::RemoveParticle(const Particle& particle)
@@ -60,8 +61,11 @@ void FieldChunk::RemoveParticle(const Particle& particle)
     if (it == m_particles.end()) return;
 
     const int index = std::distance(m_particles.begin(), it);
-    
-    m_particlesGrid[Ind(particle.position)] = nullptr;
+
+    const int indexGridDeleted = Ind(particle.position);
+    m_particlesGrid[indexGridDeleted] = nullptr;
+    UpdateTexture(indexGridDeleted, ParticleDefinitions::GetColorByType(ParticleType::None));
+    ActivateParticlesAround(particle.position);
     if (m_particles.size() != 1)
     {
         m_particlesGrid[Ind(m_particles.back().position)] = nullptr;
@@ -88,6 +92,28 @@ void FieldChunk::RemoveParticle(const IVec2 pos)
 Particle* FieldChunk::GetParticleAtPosition(const IVec2 position) const
 {
     return m_particlesGrid[Ind(position)];
+}
+
+void FieldChunk::ActivateParticlesAround(const IVec2 middlePos) const
+{
+    for (int dx = -1; dx <= 1; dx++)
+    {
+        const int x = middlePos.x + dx;
+        if (x < 0 || x >= m_width) continue;
+        
+        for (int dy = -1; dy <= 1; dy++)
+        {
+            const int y = middlePos.y + dy;
+            if (y < 0 || y >= m_height) continue;
+
+            Particle* particle = m_particlesGrid[Ind(x, y)];
+            if (particle != nullptr)
+            {
+                particle->isActive = true;
+                particle->isGrounded = false;
+            }
+        }
+    }
 }
 
 void FieldChunk::SwapParticles(const int ind, const int indOther)
@@ -126,40 +152,6 @@ void FieldChunk::SwapParticles(const int ind, const int indOther)
     {
         UpdateTexture(indOther, ParticleDefinitions::GetColorByType(ParticleType::None));
     }
-    for (int dx = -1; dx <= 1; dx++)
-    {
-        const int x = pos.x + dx;
-        if (x < 0 || x >= m_width) continue;
-        
-        for (int dy = -1; dy <= 1; dy++)
-        {
-            const int y = pos.y + dy;
-            if (y < 0 || y >= m_height) continue;
-
-            Particle* particle = m_particlesGrid[Ind(x, y)];
-            if (particle != nullptr)
-            {
-                particle->isActive = true;
-                particle->isGrounded = false;
-            }
-        }
-    }
-    for (int dx = -1; dx <= 1; dx++)
-    {
-        const int x = posOther.x + dx;
-        if (x < 0 || x >= m_width) continue;
-        
-        for (int dy = -1; dy <= 1; dy++)
-        {
-            const int y = posOther.y + dy;
-            if (y < 0 || y >= m_height) continue;
-
-            Particle* particle = m_particlesGrid[Ind(x, y)];
-            if (particle != nullptr)
-            {
-                particle->isActive = true;
-                particle->isGrounded = false;
-            }
-        }
-    }
+    ActivateParticlesAround(pos);
+    ActivateParticlesAround(posOther);
 }

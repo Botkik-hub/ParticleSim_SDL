@@ -5,8 +5,7 @@
 #include "IVec2.h"
 #include "SDL_render.h"
 
-#define ACTIVE_PARTICLES_DEBUG_VIEW true
-
+#define ACTIVE_PARTICLES_DEBUG_VIEW false
 
 enum class ParticleType;
 struct Particle;
@@ -52,7 +51,8 @@ public:
     void RemoveParticle(IVec2 pos);
     
     Particle* GetParticleAtPosition(IVec2 position) const;
-    
+    void ActivateParticlesAround(IVec2 middlePos) const;
+
 private:
     static Uint32 ColToUint(SDL_Color color);
 
